@@ -7,13 +7,14 @@ public class BangBangController implements UltrasonicController {
 	private final String TURN_RIGHT = "TURN_RIGHT";
 	private final String QUICK_TURN_RIGHT = "QUICK_TURN_RIGHT";
 	private final String TURN_LEFT = "TURN_LEFT";
-	private final String QUICK_TURN_LEFT = "QUICK_TURN_LEFT";
+	private final String QUICK_TURN_LEFT = "QUICK_TURN_LEFT"; // This might never be necessary
 	private final String NO_TURN = "NO_TURN";
 
 	private final int bandCenter;
 	private final int bandwidth;
 	private final int motorLow;
 	private final int motorHigh;
+	private final int delta;
 	private int distance;
 
 	private String status;
@@ -24,7 +25,8 @@ public class BangBangController implements UltrasonicController {
 		this.bandwidth = bandwidth;
 		this.motorLow = motorLow;
 		this.motorHigh = motorHigh;
-		status = NO_TURN;
+		this.delta = 100;
+		this.status = NO_TURN;
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 		WallFollowingLab.leftMotor.forward();
@@ -87,8 +89,8 @@ public class BangBangController implements UltrasonicController {
 	}
 
 	private void turnLeft() {
-		WallFollowingLab.leftMotor.setSpeed(motorLow); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorHigh);
+		WallFollowingLab.leftMotor.setSpeed(motorHigh - delta); // Start robot moving forward
+		WallFollowingLab.rightMotor.setSpeed(motorHigh + delta);
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
 	}
@@ -101,8 +103,8 @@ public class BangBangController implements UltrasonicController {
 	}
 
 	private void turnRight() {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorLow);
+		WallFollowingLab.leftMotor.setSpeed(motorHigh + delta); // Start robot moving forward
+		WallFollowingLab.rightMotor.setSpeed(motorHigh - delta);
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
 	}
