@@ -9,6 +9,8 @@ public class BangBangController implements UltrasonicController {
 	private final String TURN_LEFT = "TURN_LEFT";
 	private final String QUICK_TURN_LEFT = "QUICK_TURN_LEFT"; // This might never be necessary
 	private final String NO_TURN = "NO_TURN";
+	private final String BACKWARDS = "BACKWARDS";
+	private final int COUNTER_MAX = 5;
 
 	private final int bandCenter;
 	private final int bandwidth;
@@ -16,6 +18,9 @@ public class BangBangController implements UltrasonicController {
 	private final int motorHigh;
 	private final int delta;
 	private int distance;
+	private int counter;
+	
+	private int pastValues[] = new int[5];
 
 	private String status;
 
@@ -27,31 +32,47 @@ public class BangBangController implements UltrasonicController {
 		this.motorHigh = motorHigh;
 		this.delta = 100;
 		this.status = NO_TURN;
+		counter = COUNTER_MAX;
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 		WallFollowingLab.leftMotor.forward();
-		WallFollowingLab.rightMotor.forward();
+		WallFollowingLab.rightMotor.forward(); 
+		
+		for (int i = 0; i < 5; i++) {
+			pastValues[i] = 0;
+		}
 	}
 
 	@Override
 	public void processUSData(int distance) {
 		this.distance = distance;
-		float actualDist = (float)distance / 1.6f;
+		float actualDist = (float)getAveragedReading(distance) / 1.3f;
 		// TODO: process a movement based on the us distance passed in (BANG-BANG style)
-		final int error = (int)actualDist - bandCenter;
-		
+		final int error = (int) actualDist - bandCenter;
+
 		// TODO: implement some sort of correction function to smooth out the input.
-		
+
+		/*
+		 * if (distance > 200) { if (counter-- > 0) { setHighSpeed(); return; } else if
+		 * (counter <= 0) { counter = COUNTER_MAX; } }
+		 */
+
 		if (status.equals(TURN_RIGHT)) {
 			if (actualDist < 10) {
 				setStatus(QUICK_TURN_RIGHT);
 				quickTurnRight();
 				return;
-			} else if (actualDist > 10 && actualDist < 50) {
+			} else if (actualDist > 10 && actualDist < 25) {
 				setStatus(TURN_RIGHT);
 				turnRight();
 				return; // Keep turning right to avoid errors
 			}
+		}
+		
+		if (actualDist < 5) {
+			setStatus(BACKWARDS);
+			backwardsAdjust();
+			return;
 		}
 
 		// System.out.println("Error:" + error + " Distance: " + distance);
@@ -73,7 +94,6 @@ public class BangBangController implements UltrasonicController {
 			turnRight();
 		}
 
-		
 	}
 
 	@Override
@@ -89,35 +109,62 @@ public class BangBangController implements UltrasonicController {
 	}
 
 	private void turnLeft() {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh - delta); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorHigh + delta);
+		WallFollowingLab.leftMotor.setSpeed(motorLow); // Start robot moving forward
+		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
 	}
 
 	private void quickTurnLeft() {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorHigh);
+		WallFollowingLab.leftMotor.setSpeed(motorHigh * 2); // Start robot moving forward
+		WallFollowingLab.rightMotor.setSpeed(motorHigh * 2);
 		WallFollowingLab.leftMotor.backward();
 		WallFollowingLab.rightMotor.forward();
 	}
 
 	private void turnRight() {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh + delta); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorHigh - delta);
+		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
+		WallFollowingLab.rightMotor.setSpeed(motorLow);
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
 	}
 
 	private void quickTurnRight() {
+		WallFollowingLab.leftMotor.setSpeed(motorHigh * 4); // Start robot moving forward
+		WallFollowingLab.leftMotor.forward();
+		WallFollowingLab.rightMotor.setSpeed(motorHigh * 4);
+		WallFollowingLab.rightMotor.backward();
+	}
+
+	private void backwardsAdjust() {
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
-		WallFollowingLab.leftMotor.forward();
+		WallFollowingLab.leftMotor.backward();
 		WallFollowingLab.rightMotor.backward();
 	}
 
 	private void setStatus(String s) {
 		status = s;
+	}
+	
+	private int getAveragedReading(int val) {
+		int sum = 0, j = 0;
+		for (int i = 0; i < 4; i++) {
+			if (pastValues[i] == 0) {
+				continue;
+			}
+			pastValues[i + 1] = pastValues[i];
+			sum += pastValues[i + 1];
+			j++;
+		}
+		
+		pastValues[0] = val;
+		
+		if (j == 0) {
+			j = 1;
+		}
+		
+		return (int)((sum + val)/j);
 	}
 
 }
