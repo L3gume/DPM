@@ -8,4 +8,6 @@ The labs are about building robots with lego Mindstorms kits and the lejOS opera
 * Clone repo into directory of choice
 * Use the repo as your eclipse workspace (yes, eclipse...)
 
+**It is recommended to use the lejOS eclipse plugin for easy deployment**
 
+I am currently working on an intelliJ plugin. I am currently in a very busy semester so it might take a while before it is in the same state as the eclipse version.
