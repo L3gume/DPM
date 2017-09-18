@@ -29,10 +29,8 @@ public class PController implements UltrasonicController {
 	private int filterControl;
 	private int distError = 0;
 	private int distanceAdjust = 0;
-	private int rightCompensation = 4;
 	private int rightTurnSpeedMult = 2;
 	private int adjustCounter = 0;
-	private boolean adjusted = false;
 
 	private final int ARRAY_LENGTH = 5;
 	private int pastValues[] = new int[ARRAY_LENGTH];

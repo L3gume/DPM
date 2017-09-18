@@ -4,6 +4,7 @@ import javax.swing.plaf.ActionMapUIResource;
 
 import lejos.hardware.motor.*;
 
+@SuppressWarnings("unused")
 public class BangBangController implements UltrasonicController {
 
 	private final String TURN_RIGHT = "TURN_RIGHT";
@@ -12,7 +13,6 @@ public class BangBangController implements UltrasonicController {
 	private final String QUICK_TURN_LEFT = "QUICK_TURN_LEFT"; // This might never be necessary
 	private final String NO_TURN = "NO_TURN";
 	private final String BACKWARDS = "BACKWARDS";
-	private final int COUNTER_MAX = 5;
 
 	private final int FILTER_DISTANCE = 70;
 	private final int FILTER_COUNT = 10;
@@ -21,9 +21,7 @@ public class BangBangController implements UltrasonicController {
 	private final int bandwidth;
 	private final int motorLow;
 	private final int motorHigh;
-	private final int delta;
 	private int distance;
-	private int counter;
 	
 	private int filterCount = 0;
 	
@@ -38,9 +36,7 @@ public class BangBangController implements UltrasonicController {
 		this.bandwidth = bandwidth;
 		this.motorLow = motorLow;
 		this.motorHigh = motorHigh;
-		this.delta = 100;
 		this.status = NO_TURN;
-		counter = COUNTER_MAX;
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 		WallFollowingLab.leftMotor.forward();
@@ -53,10 +49,6 @@ public class BangBangController implements UltrasonicController {
 
 	@Override
 	public void processUSData(int distance) {
-		 /*else if (distance > 70 && filterCount <= 5) {
-			filterCount++;
-			return;
-		}*/
 		distance /= 1.3f;
 		this.distance = distance;
 		float actualDist = 0; //= (float)getAveragedReading(distance) / 1.3f;
@@ -84,11 +76,6 @@ public class BangBangController implements UltrasonicController {
 
 		// TODO: implement some sort of correction function to smooth out the input.
 
-		/*
-		 * if (distance > 200) { if (counter-- > 0) { setHighSpeed(); return; } else if
-		 * (counter <= 0) { counter = COUNTER_MAX; } }
-		 */
-
 		if (status.equals(TURN_RIGHT)) {
 			if (actualDist < 15) {
 				setStatus(QUICK_TURN_RIGHT);
@@ -99,14 +86,7 @@ public class BangBangController implements UltrasonicController {
 				turnRight();
 				return; // Keep turning right to avoid errors
 			}
-		} /*else if (status.equals(QUICK_TURN_RIGHT)) {
-			if (actualDist < 7) {
-				setStatus(QUICK_TURN_RIGHT);
-				quickTurnRight();
-				return;
-			}
-		}*/
-		
+		}
 		
 		if (actualDist < 5) {
 			setStatus(BACKWARDS);
