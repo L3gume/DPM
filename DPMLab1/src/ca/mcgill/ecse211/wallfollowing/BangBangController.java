@@ -64,7 +64,7 @@ public class BangBangController implements UltrasonicController {
 		} else if (distance > 0) {
 			// sensorDistance went below FILTER_DISTANCE, therefore reset everything.
 			this.filterCount = 0;
-			actualDist = getAveragedReading(distance);
+			actualDist = (float)getAveragedReading(distance);
 		}
 		
 		if (actualDist <= 0) {
@@ -88,7 +88,7 @@ public class BangBangController implements UltrasonicController {
 			}
 		}
 		
-		if (actualDist < 5) {
+		if (actualDist < 7) {
 			setStatus(BACKWARDS);
 			backwardsAdjust();
 			return;
@@ -140,7 +140,7 @@ public class BangBangController implements UltrasonicController {
 
 	private void quickTurnLeft() {
 		WallFollowingLab.leftMotor.setSpeed(motorLow); // Start robot moving forward
-		WallFollowingLab.rightMotor.setSpeed(motorHigh + 50);
+		WallFollowingLab.rightMotor.setSpeed(motorHigh + 100);
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
 	}

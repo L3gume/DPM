@@ -5,13 +5,13 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 public class PController implements UltrasonicController {
 
 	// member constants
-	private final int FILTER_COUNT = 10;
+	private final int FILTER_COUNT = 30;
 	private final int FILTER_DISTANCE = 70;
-	private final int MOTOR_SPEED = 200;
-	private final int RIGHT_SCALE = 4;
+	private final int MOTOR_SPEED = 150;
+	private final int RIGHT_SCALE = 2;
 	private final double ERROR_SCALE = 1.7;
 	private final int MAX_SPEED = 200;
-	private final int ADJUST_COUNTER = 40;
+	private final int ADJUST_COUNTER = 60;
 
 	private final String TURN_RIGHT = "TURN_RIGHT";
 	private final String TURN_LEFT = "TURN_LEFT";
@@ -29,7 +29,7 @@ public class PController implements UltrasonicController {
 	private int filterControl;
 	private int distError = 0;
 	private int distanceAdjust = 0;
-	private int rightTurnSpeedMult = 2;
+	private int rightTurnSpeedMult = 1;
 	private int adjustCounter = 0;
 
 	private final int ARRAY_LENGTH = 5;
@@ -40,7 +40,7 @@ public class PController implements UltrasonicController {
 			int bandwidth) {
 
 		// Initialize Member Variables
-		this.bandCenter = bandCenter;
+		this.bandCenter = 30; //bandCenter;
 		this.bandwidth = 2;// bandwidth;
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
@@ -57,7 +57,7 @@ public class PController implements UltrasonicController {
 	@Override
 	public void processUSData(int sensorDistance) {
 		// Filter used to delay when making big changes (ie sharp corners)
-		//sensorDistance /= 1.5;
+		//sensorDistance /= 1.3;
 
 		if ((sensorDistance >= FILTER_DISTANCE && this.filterControl < FILTER_COUNT) || sensorDistance < 0) {
 			// bad value, do not set the sensorDistance var, however do increment the filter
@@ -65,16 +65,18 @@ public class PController implements UltrasonicController {
 			this.filterControl++;
 		} else if (sensorDistance >= FILTER_DISTANCE) {
 			// set sensorDistance to FILTER_DISTANCE
-			this.distance = 70;
 			this.filterControl = 0;
-			this.distance = /*sensorDistance;*/  getAveragedReading(sensorDistance);
+			//this.distance = sensorDistance; //getAveragedReading(sensorDistance);
+			this.distance = 70; // Just set it to our threshold
 		} else if (sensorDistance > 0) {
 			// sensorDistance went below FILTER_DISTANCE, therefore reset everything.
 			this.filterControl = 0;
-			this.distance = /*sensorDistance;*/ getAveragedReading(sensorDistance);
+			this.distance = sensorDistance; //getAveragedReading(sensorDistance);
 		}
 
-		if (distance > 30) {
+		
+		// If the distance is too high for too long, we're off track. 
+		if (distance > 25) {
 			if (adjustCounter++ > ADJUST_COUNTER) {
 				leftAdjust();
 				setStatus(ADJUST_LEFT);
@@ -168,14 +170,6 @@ public class PController implements UltrasonicController {
 		float leftSpeed = MOTOR_SPEED - variableRate;
 		float rightSpeed = MOTOR_SPEED + variableRate;
 
-		/*
-		 * if (leftSpeed > MAX_SPEED) { leftSpeed = MAX_SPEED + 100; } else if
-		 * (leftSpeed < 0) { leftSpeed = 50; }
-		 * 
-		 * if (rightSpeed > MAX_SPEED) { rightSpeed = MAX_SPEED; } else if (rightSpeed <
-		 * 0) { rightSpeed = 50; }
-		 */
-
 		if (Math.abs(leftSpeed) > MAX_SPEED) {
 			leftSpeed = leftSpeed * MAX_SPEED / Math.abs(leftSpeed);
 		}
@@ -190,8 +184,6 @@ public class PController implements UltrasonicController {
 		} else {
 			leftMotor.setSpeed(100);
 			leftMotor.forward();
-			
-			//leftMotor.backward();
 		}
 		if (rightSpeed > 0) {
 			rightMotor.forward();
@@ -208,20 +200,16 @@ public class PController implements UltrasonicController {
 	}
 
 	private void backward() {
-		leftMotor.setSpeed(MOTOR_SPEED * 2);
-		rightMotor.setSpeed(MOTOR_SPEED * 4);
+		leftMotor.setSpeed(100);
+		rightMotor.setSpeed(150);
 		leftMotor.backward();
 		rightMotor.backward();
 	}
 
 	private void leftAdjust() {
-		/*leftMotor.setSpeed(50);
-		rightMotor.setSpeed(50);
-		leftMotor.backward();
-		rightMotor.forward();*/
-		
+		// Actually using a proportional speed will almost never work in this case
 		leftMotor.setSpeed(50);
-		rightMotor.setSpeed(150);
+		rightMotor.setSpeed(175);
 		leftMotor.forward();
 		rightMotor.forward();
 	}
