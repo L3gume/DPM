@@ -10,11 +10,14 @@ public class OdometryDisplay extends Thread {
   private static final long DISPLAY_PERIOD = 250;
   private Odometer odometer;
   private TextLCD t;
+  
+  private OdometryCorrection correction;
 
   // constructor
-  public OdometryDisplay(Odometer odometer, TextLCD t) {
+  public OdometryDisplay(Odometer odometer, TextLCD t, OdometryCorrection cor) {
     this.odometer = odometer;
     this.t = t;
+    this.correction = cor;
   }
 
   // run method (required for Thread)
@@ -40,6 +43,8 @@ public class OdometryDisplay extends Thread {
       for (int i = 0; i < 3; i++) {
         t.drawString(formattedDoubleToString(position[i], 2), 3, i);
       }
+      
+      t.drawString("Light level: " + correction.getLightLevel(), 0, 4);
 
       // throttle the OdometryDisplay
       displayEnd = System.currentTimeMillis();

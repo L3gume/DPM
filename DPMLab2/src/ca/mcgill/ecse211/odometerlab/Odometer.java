@@ -56,17 +56,17 @@ public class Odometer extends Thread {
 			double delta_dist = 0.5 * (d_l + d_r);
 			// Compute the position variation
 			
-			double delta_x = delta_dist * Math.sin(this.theta + new_theta);
-			double delta_y = delta_dist * Math.cos(this.theta + new_theta);
-			
 			synchronized (lock) {
 				/**
 				 * Don't use the variables x, y, or theta anywhere but here! Only update the
 				 * values of x, y, and theta in this block. Do not perform complex math
 				 * 
 				 */
+				double delta_x = delta_dist * Math.sin(this.theta + new_theta);
+				double delta_y = delta_dist * Math.cos(this.theta + new_theta);
+				
 				// Update theta
-				setTheta(this.theta + new_theta);
+				setTheta(computeAngle(this.theta + new_theta));
 				
 				// Update the position
 				setX(getX() + delta_x);
@@ -194,7 +194,18 @@ public class Odometer extends Thread {
 		}
 	}
 	
-	public double computeDisplacement(double radius, double phi) {
+	private double computeDisplacement(double radius, double phi) {
 		return (radius * Math.PI * phi) / 180;
+	}
+	
+	private double computeAngle(double t_rad) {
+		double t_deg = Math.toDegrees(t_rad);
+		if (t_deg > 359.99999999 && t_deg >= 0) { 
+			t_deg = t_deg - 360;
+		} else if (t_deg < 0) {
+			t_deg = 360 + t_deg;
+		}
+		
+		return Math.toRadians(t_deg);
 	}
 }
