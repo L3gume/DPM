@@ -45,6 +45,7 @@ public class OdometryDisplay extends Thread {
       }
       
       t.drawString("Light level: " + correction.getLightLevel(), 0, 4);
+      t.drawString("Line count: " + correction.getLineCount(), 0, 5);
 
       // throttle the OdometryDisplay
       displayEnd = System.currentTimeMillis();
