@@ -51,7 +51,7 @@ public class Odometer extends Thread {
 			double d_r = computeDisplacement(WHEEL_RAD, phi_r);
 			
 			// new theta
-			double new_theta = ((d_l - d_r) / WHEELBASE);
+			double delta_theta = ((d_l - d_r) / WHEELBASE);
 			
 			double delta_dist = 0.5 * (d_l + d_r);
 			// Compute the position variation
@@ -62,11 +62,13 @@ public class Odometer extends Thread {
 				 * values of x, y, and theta in this block. Do not perform complex math
 				 * 
 				 */
-				double delta_x = delta_dist * Math.sin(this.theta + new_theta);
-				double delta_y = delta_dist * Math.cos(this.theta + new_theta);
 				
 				// Update theta
-				setTheta(computeAngle(this.theta + new_theta));
+				setTheta(computeAngle(this.theta + delta_theta));
+				
+				double delta_x = delta_dist * Math.sin(getTheta());
+				double delta_y = delta_dist * Math.cos(getTheta());
+				
 				
 				// Update the position
 				setX(getX() + delta_x);
