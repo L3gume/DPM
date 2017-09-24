@@ -22,6 +22,9 @@ public class OdometryCorrection extends Thread {
 	private static final double VELOCITY = 7.33;
 	private final boolean debug_mode = false;
 
+	public enum dir { ZERO, NINETY, ONEEIGHTY, TWOSEVENTY };
+	private dir cur_dir;
+	
 	private double[] prev_pos;
 
 	// constructor
@@ -53,52 +56,38 @@ public class OdometryCorrection extends Thread {
 			if (light_level > 0.1 && light_level < 0.5 && System.currentTimeMillis() - line_detected_time > 3000) {
 				// System.out.println("Line detected");
 				if (line_count > 0 && line_count % 3 != 0) {
-					// Compute the distance travelled
-					double delta_t = System.currentTimeMillis() - line_detected_time;
-					double distance_travelled = VELOCITY * (delta_t / 1000);
-					if (debug_mode)
-						System.out.println("Distance travelled since last line: " + distance_travelled + " in "
-								+ delta_t / 1000 + "s");
 
-					// Knowing the distance travelled and the theta from the previous line, compute
-					// the x and y variations
-					double delta_x = distance_travelled * Math.sin(prev_pos[2]);
-					double delta_y = distance_travelled * Math.cos(prev_pos[2]);
+					// TODO: implement a direction enum
 
-					// Now we know the distance we travelled, our Y (or X) variation, we only need
-					// theta
-					// depending on our previous know orientation, determine a new one with the
-					// distance travelled and the grid length.
-
-					/*double new_theta = 0.0;
-					if (Math.abs(Math.cos(prev_pos[2])) >= 0.707106) {
-						if (Math.cos(prev_pos[2]) >= 0) {
-							delta_y = 30.48;
-							delta_x = delta_y * Math.tan(odometer.getTheta());
-							// new_theta = Math.atan(delta_x / delta_y);
-						} else if (Math.cos(prev_pos[2]) < 0) {
-							delta_y = -30.48;
-							delta_x = delta_y * Math.tan(odometer.getTheta());
-							// new_theta = Math.atan(delta_x / delta_y);
-						}
-					} else if (Math.abs(Math.sin(prev_pos[2])) >= 0.707106) {
-						if (Math.sin(prev_pos[2]) >= 0) {
-							delta_x = 30.48;
-							delta_y = delta_x * Math.tan(odometer.getTheta());
-							// new_theta = Math.atan(delta_y / delta_x);
-						} else if (Math.sin(prev_pos[2]) < 0) {
-							delta_x = -30.48;
-							delta_y = delta_x * Math.tan(odometer.getTheta());
-							// new_theta = Math.atan(delta_y / delta_x);
-						}
-					}*/
-
-					// if (debug_mode) System.out.println("New theta: " +
-					// Math.toDegrees(computeAngle(new_theta)));
-					/* if (new_theta != 0.0) System.out.println("new theta = 0!"); */
-
-					setNewPos(prev_pos[0] + delta_x, prev_pos[1] + delta_y/*,
-							Double.isNaN(new_theta) ? prev_pos[2] : computeAngle(new_theta)*/);
+					double delta_x = 0, delta_y = 0, travelled_dist = 0;
+					double cur_theta = odometer.getTheta();
+					cur_dir = getDir(Math.toDegrees(cur_theta));
+					switch (cur_dir) {
+					case ZERO:
+						delta_y = GRID_LENGTH;
+						delta_x = (delta_y * cur_theta) / (90 - cur_theta);
+						break;
+					case NINETY:
+						delta_x = GRID_LENGTH;
+						delta_y = (delta_x * cur_theta) / (90 - (180 -cur_theta));
+						break;
+					case ONEEIGHTY:
+						delta_y = -GRID_LENGTH;
+						delta_x = (delta_y * cur_theta) / (90 - (270 - cur_theta));
+						break;
+					case TWOSEVENTY:
+						delta_x = -GRID_LENGTH;
+						delta_y = (delta_x * cur_theta) / (90 - (360 - cur_theta));
+						break;
+					}
+						
+					setNewPos(prev_pos[0] + delta_x, prev_pos[1] + delta_y);
+				} else if (line_count == 0) {
+					// first time we cross a line means origin in y
+					odometer.setY(0.0);
+				} else if (line_count == 3) {
+					// When crossing the 4th line, origin in x
+					odometer.setX(0.0);
 				}
 				updatePrevPos();
 				line_detected_time = System.currentTimeMillis(); // Capture the last time we crossed a line.
@@ -157,4 +146,21 @@ public class OdometryCorrection extends Thread {
 		return Math.toRadians(t_deg);
 	}
 
+	// Approximate the direction of the robot
+	private dir getDir(double t_deg) {
+		double error = 5.0;
+		if (t_deg + error >= 0 && t_deg - error <= 0) {
+			return dir.ZERO;
+		} else if (t_deg + error >= 360 && t_deg - error <= 360) {
+			return dir.ZERO;
+		} else if (t_deg + error >= 90 && t_deg - error <= 90) {
+			return dir.NINETY;
+		} else if (t_deg + error >= 180 && t_deg - error <= 180) {
+			return dir.ONEEIGHTY;
+		} else if (t_deg + error >= 270 && t_deg - error <= 270) {
+			return dir.TWOSEVENTY;
+		} 
+		// That should not happen
+		return dir.ZERO;
+	}
 }
