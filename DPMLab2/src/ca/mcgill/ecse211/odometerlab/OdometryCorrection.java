@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.odometerlab;
 
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3ColorSensor;
@@ -55,29 +56,34 @@ public class OdometryCorrection extends Thread {
 			// Changed the light level
 			if (light_level > 0.1 && light_level < 0.5 && System.currentTimeMillis() - line_detected_time > 3000) {
 				// System.out.println("Line detected");
+				Sound.beep();
 				if (line_count > 0 && line_count % 3 != 0) {
 
 					// TODO: implement a direction enum
 
 					double delta_x = 0, delta_y = 0, travelled_dist = 0;
-					double cur_theta = odometer.getTheta();
+					double cur_theta = (prev_pos[2] + odometer.getTheta()) / 2; // Average with past value to reduce random variations in the angle
 					cur_dir = getDir(Math.toDegrees(cur_theta));
 					switch (cur_dir) {
 					case ZERO:
 						delta_y = GRID_LENGTH;
-						delta_x = (delta_y * cur_theta) / (90 - cur_theta);
+						double angle_zero = computeAngle(90 - Math.toDegrees(cur_theta));
+						delta_x = -1 * (delta_y * Math.sin(cur_theta)) / Math.sin(angle_zero);
 						break;
 					case NINETY:
 						delta_x = GRID_LENGTH;
-						delta_y = (delta_x * cur_theta) / (90 - (180 -cur_theta));
+						double angle_ninety = computeAngle(90 - (Math.toDegrees(cur_theta) - 90));
+						delta_y = -1 * (delta_x * Math.sin(cur_theta - Math.PI/2)) / Math.sin(angle_ninety);
 						break;
 					case ONEEIGHTY:
 						delta_y = -GRID_LENGTH;
-						delta_x = (delta_y * cur_theta) / (90 - (270 - cur_theta));
+						double angle_oneeighty = computeAngle(90 - (Math.toDegrees(cur_theta) - 180));
+						delta_x = -1 * (delta_y * Math.sin(cur_theta - 2*Math.PI)) / Math.sin(angle_oneeighty);
 						break;
 					case TWOSEVENTY:
 						delta_x = -GRID_LENGTH;
-						delta_y = (delta_x * cur_theta) / (90 - (360 - cur_theta));
+						double angle_twoseventy = computeAngle(90 - (Math.toDegrees(cur_theta) - 270));
+						delta_y = -1 * (delta_x * Math.sin(cur_theta - (3*Math.PI)/2)) / Math.sin(angle_twoseventy);
 						break;
 					}
 						
@@ -87,6 +93,12 @@ public class OdometryCorrection extends Thread {
 					odometer.setY(0.0);
 				} else if (line_count == 3) {
 					// When crossing the 4th line, origin in x
+					odometer.setX(0.0);
+				} else if (line_count == 8) {
+					// reached y = 0 again
+					odometer.setY(0.0);
+				} else if (line_count == 11) {
+					// reached x = 0 again
 					odometer.setX(0.0);
 				}
 				updatePrevPos();
@@ -148,7 +160,7 @@ public class OdometryCorrection extends Thread {
 
 	// Approximate the direction of the robot
 	private dir getDir(double t_deg) {
-		double error = 5.0;
+		double error = 8.0;
 		if (t_deg + error >= 0 && t_deg - error <= 0) {
 			return dir.ZERO;
 		} else if (t_deg + error >= 360 && t_deg - error <= 360) {
