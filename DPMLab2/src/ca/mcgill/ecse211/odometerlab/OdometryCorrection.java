@@ -23,9 +23,12 @@ public class OdometryCorrection extends Thread {
 	private static final double VELOCITY = 7.33;
 	private final boolean debug_mode = false;
 
-	public enum dir { ZERO, NINETY, ONEEIGHTY, TWOSEVENTY };
+	public enum dir {
+		ZERO, NINETY, ONEEIGHTY, TWOSEVENTY
+	};
+
 	private dir cur_dir;
-	
+
 	private double[] prev_pos;
 
 	// constructor
@@ -62,7 +65,8 @@ public class OdometryCorrection extends Thread {
 					// TODO: implement a direction enum
 
 					double delta_x = 0, delta_y = 0, travelled_dist = 0;
-					double cur_theta = (prev_pos[2] + odometer.getTheta()) / 2; // Average with past value to reduce random variations in the angle
+					double cur_theta = (prev_pos[2] + odometer.getTheta()) / 2; // Average with past value to reduce
+																				// random variations in the angle
 					cur_dir = getDir(Math.toDegrees(cur_theta));
 					switch (cur_dir) {
 					case ZERO:
@@ -73,20 +77,20 @@ public class OdometryCorrection extends Thread {
 					case NINETY:
 						delta_x = GRID_LENGTH;
 						double angle_ninety = computeAngle(90 - (Math.toDegrees(cur_theta) - 90));
-						delta_y = -1 * (delta_x * Math.sin(cur_theta - Math.PI/2)) / Math.sin(angle_ninety);
+						delta_y = -1 * (delta_x * Math.sin(cur_theta - Math.PI / 2)) / Math.sin(angle_ninety);
 						break;
 					case ONEEIGHTY:
 						delta_y = -GRID_LENGTH;
 						double angle_oneeighty = computeAngle(90 - (Math.toDegrees(cur_theta) - 180));
-						delta_x = -1 * (delta_y * Math.sin(cur_theta - 2*Math.PI)) / Math.sin(angle_oneeighty);
+						delta_x = -1 * (delta_y * Math.sin(cur_theta - 2 * Math.PI)) / Math.sin(angle_oneeighty);
 						break;
 					case TWOSEVENTY:
 						delta_x = -GRID_LENGTH;
 						double angle_twoseventy = computeAngle(90 - (Math.toDegrees(cur_theta) - 270));
-						delta_y = -1 * (delta_x * Math.sin(cur_theta - (3*Math.PI)/2)) / Math.sin(angle_twoseventy);
+						delta_y = -1 * (delta_x * Math.sin(cur_theta - (3 * Math.PI) / 2)) / Math.sin(angle_twoseventy);
 						break;
 					}
-						
+
 					setNewPos(prev_pos[0] + delta_x, prev_pos[1] + delta_y);
 				} else if (line_count == 0) {
 					// first time we cross a line means origin in y
@@ -141,10 +145,10 @@ public class OdometryCorrection extends Thread {
 		}
 	}
 
-	private synchronized void setNewPos(double x, double y/*, double theta*/) {
+	private synchronized void setNewPos(double x, double y/* , double theta */) {
 		odometer.setX(x);
 		odometer.setY(y);
-		//odometer.setTheta(theta);
+		// odometer.setTheta(theta);
 	}
 
 	private double computeAngle(double t_rad) {
@@ -171,7 +175,7 @@ public class OdometryCorrection extends Thread {
 			return dir.ONEEIGHTY;
 		} else if (t_deg + error >= 270 && t_deg - error <= 270) {
 			return dir.TWOSEVENTY;
-		} 
+		}
 		// That should not happen
 		return dir.ZERO;
 	}
