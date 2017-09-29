@@ -29,6 +29,7 @@ public class ObstacleAvoidanceLab {
   public static final double WHEEL_RADIUS = 2.1;
   public static final double TRACK = 9.8;
 
+  
   public static void main(String[] args) {
     int buttonChoice = -1;
 
@@ -37,7 +38,7 @@ public class ObstacleAvoidanceLab {
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-    Navigator nav = new Navigator(d);
+    Navigator nav = new Navigator(d, odometer);
     OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, odometryCorrection, nav);
 
     do {
@@ -92,11 +93,16 @@ public class ObstacleAvoidanceLab {
     }*/
     
     if (buttonChoice != -1)  {
-      if (buttonChoice == Button.ID_ESCAPE) {
-        System.exit(0);
+      switch (buttonChoice) {
+        case Button.ID_LEFT: nav.setPath(1); break;
+        case Button.ID_RIGHT: nav.setPath(2); break;
+        case Button.ID_UP: nav.setPath(3); break;
+        case Button.ID_DOWN: nav.setPath(4); break;
+        case Button.ID_ESCAPE: System.exit(0); break;
       }
       odometer.start();
       odometryDisplay.start();
+      nav.start();
       /*(new Thread() {
         public void run() {
           Driver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);

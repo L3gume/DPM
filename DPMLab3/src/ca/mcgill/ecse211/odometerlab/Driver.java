@@ -8,8 +8,8 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 // Taken from the last lab.
 
 public class Driver {
-  private static final int FORWARD_SPEED = 200;
-  private static final int ROTATE_SPEED = 150;
+  private static final int FORWARD_SPEED = 150;
+  private static final int ROTATE_SPEED = 100;
 
   EV3LargeRegulatedMotor leftMotor;
   EV3LargeRegulatedMotor rightMotor;
@@ -66,12 +66,16 @@ public class Driver {
   public void rotate(double angle) {
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);
+    /*leftMotor.forward();
+    rightMotor.forward();*/
     
-    if (angle > 0) {
+    angle = Math.toDegrees(angle);
+    
+    if (angle < 0) {
       // turn right
       //rotating = true;
-      leftMotor.rotate(convertAngle(leftRadius, width, angle), true);
-      rightMotor.rotate(-convertAngle(rightRadius, width, angle), true);
+      leftMotor.rotate(convertAngle(leftRadius, width, Math.abs(angle)), true);
+      rightMotor.rotate(-convertAngle(rightRadius, width, Math.abs(angle)), true);
     } else {
       // turn left
       //rotating = true;
@@ -83,9 +87,17 @@ public class Driver {
   public void gotoPos(double dist) {
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
+    
+    //leftMotor.forward();
+    //rightMotor.forward();
 
     leftMotor.rotate(convertDistance(leftRadius, dist), true);
     rightMotor.rotate(convertDistance(rightRadius, dist), true);
+  }
+  
+  public void stop() {
+    rightMotor.stop();
+    leftMotor.stop();
   }
 
   private static int convertDistance(double radius, double distance) {

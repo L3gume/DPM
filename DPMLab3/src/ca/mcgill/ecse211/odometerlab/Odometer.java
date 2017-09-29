@@ -23,7 +23,7 @@ public class Odometer extends Thread {
     this.rightMotor = rightMotor;
     this.x = 0.0;
     this.y = 0.0;
-    this.theta = 0.0;
+    this.theta = Math.toRadians(90.0);
     this.leftMotorTachoCount = 0;
     this.rightMotorTachoCount = 0;
     lock = new Object();
@@ -54,7 +54,7 @@ public class Odometer extends Thread {
       double d_r = computeDisplacement(WHEEL_RAD, phi_r);
 
       // new theta
-      double delta_theta = ((d_l - d_r) / WHEELBASE);
+      double delta_theta = ((d_r - d_l) / WHEELBASE);
 
       double delta_dist = 0.5 * (d_l + d_r);
       // Compute the position variation
@@ -69,8 +69,8 @@ public class Odometer extends Thread {
         // Update theta
         setTheta(computeAngle(this.theta + delta_theta));
 
-        double delta_x = delta_dist * Math.sin(getTheta());
-        double delta_y = delta_dist * Math.cos(getTheta());
+        double delta_x = delta_dist * Math.cos(getTheta());
+        double delta_y = delta_dist * Math.sin(getTheta());
 
 
         // Update the position
