@@ -43,7 +43,8 @@ public class Navigator extends Thread {
   public void run() {
     while (true) {
 
-
+    	// To other stuff here
+    	
       switch (cur_state) {
         case IDLE:
           cur_state = process_idle();
@@ -55,11 +56,13 @@ public class Navigator extends Thread {
           cur_state = process_rotating();
           break;
         case MOVING_STRAIGHT:
+        	cur_state = process_movingstraight();
           break;
         case MOVING_AVOIDING:
+        	cur_state = process_movingavoiding();
           break;
         case REACHED_POINT:
-          cur_state = process_computing();
+          cur_state = process_reachedpoint();
           break;
         // There should never be a default case
         default:
@@ -87,16 +90,8 @@ public class Navigator extends Thread {
   private state process_computing() {
     // Compute the distance and angle to the target position, if rotation is needed, set state to
     // rotating, if not: move.
-    
-    //int delta_x = target_pos.x - current_pos.x;
-    //int delta_y = target_pos.y - current_pos.y;
-
-    double dist_x = target_pos.x * SQUARE_LENGTH - odo.getX();
-    double dist_y = target_pos.y * SQUARE_LENGTH - odo.getY();
-    
-    double vect_to_target[] = {dist_x, dist_y};
-    dist_to_target_pos = magnitude(vect_to_target);
-    angle_to_target_pos = angleToPos(vect_to_target);
+	  updateTargetInfo();
+	  
     if (Math.abs(angle_to_target_pos) > 0) {
       return state.ROTATING;
     } else if (dist_to_target_pos > 0) {
@@ -107,6 +102,7 @@ public class Navigator extends Thread {
   }
 
   private state process_rotating() {
+	  updateTargetInfo();
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
       driver.rotate(angle_to_target_pos);
       return state.ROTATING;
@@ -119,7 +115,18 @@ public class Navigator extends Thread {
   }
 
   private state process_movingstraight() {
-    return state.IDLE;
+	  updateTargetInfo();
+	  if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
+	      driver.rotate(angle_to_target_pos);
+	      return state.ROTATING;
+	    } else {
+	      if (dist_to_target_pos > DISTANCE_THRESHOLD) {
+	        return state.MOVING_STRAIGHT;
+	      } else {
+	    	  // Find some way of confirming that we are at the right position
+	    	  return state.REACHED_POINT;
+	      }
+	    }
   }
 
   private state process_movingavoiding() {
@@ -128,8 +135,14 @@ public class Navigator extends Thread {
   }
 
   private state process_reachedpoint() {
-    target_pos = getNextWaypoint();
-    return state.COMPUTING;
+	  updateTargetInfo();
+	  if (dist_to_target_pos < DISTANCE_THRESHOLD) {
+		  target_pos = getNextWaypoint();
+		    return state.COMPUTING;
+	  } else {
+		return state.MOVING_STRAIGHT; // Will have to improve this.
+	  }
+   
   }
 
   /*
@@ -155,6 +168,15 @@ public class Navigator extends Thread {
   private double magnitude(double v[]) {
     return Math.sqrt(Math.pow(v[0], 2) + Math.pow(v[1], 2));
   }
+  
+  private void updateTargetInfo() {
+	  double dist_x = target_pos.x * SQUARE_LENGTH - odo.getX();
+	    double dist_y = target_pos.y * SQUARE_LENGTH - odo.getY();
+	    
+	    double vect_to_target[] = {dist_x, dist_y};
+	    dist_to_target_pos = magnitude(vect_to_target);
+	    angle_to_target_pos = angleToPos(vect_to_target);
+  }
 
   /*
    * Utility methods
@@ -166,6 +188,7 @@ public class Navigator extends Thread {
   }
 
   // Taken from previous lab
+  @SuppressWarnings("unused")
   private static int convertAngle(double radius, double width, double angle) {
     return convertDistance(radius, Math.PI * width * angle / 360.0);
   }

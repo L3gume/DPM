@@ -71,12 +71,12 @@ public class Driver {
       // turn right
       //rotating = true;
       leftMotor.rotate(convertAngle(leftRadius, width, angle), true);
-      rightMotor.rotate(-convertAngle(rightRadius, width, angle), false);
+      rightMotor.rotate(-convertAngle(rightRadius, width, angle), true);
     } else {
       // turn left
       //rotating = true;
       leftMotor.rotate(-convertAngle(leftRadius, width, Math.abs(angle)), true);
-      rightMotor.rotate(convertAngle(rightRadius, width, Math.abs(angle)), false);
+      rightMotor.rotate(convertAngle(rightRadius, width, Math.abs(angle)), true);
     }
   }
   
@@ -85,7 +85,7 @@ public class Driver {
     rightMotor.setSpeed(FORWARD_SPEED);
 
     leftMotor.rotate(convertDistance(leftRadius, dist), true);
-    rightMotor.rotate(convertDistance(rightRadius, dist), false);
+    rightMotor.rotate(convertDistance(rightRadius, dist), true);
   }
 
   private static int convertDistance(double radius, double distance) {
