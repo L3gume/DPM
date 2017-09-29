@@ -23,6 +23,9 @@ public class OdometryCorrection extends Thread {
   private static final double VELOCITY = 7.33;
   private final boolean debug_mode = false;
 
+  private int[] grid_pos;
+  private int[] prev_grid_pos;
+
   public enum dir {
     ZERO, NINETY, ONEEIGHTY, TWOSEVENTY
   };
@@ -45,6 +48,9 @@ public class OdometryCorrection extends Thread {
     prev_pos = new double[3];
     line_count = 0;
     line_detected_time = 0;
+    grid_pos = new int[2];
+    prev_grid_pos = new int[2];
+    grid_pos[0] = grid_pos[1] = prev_grid_pos[0] = prev_grid_pos[1] = 0; // intial position.
   }
 
   // run method (required for Thread)
@@ -70,61 +76,50 @@ public class OdometryCorrection extends Thread {
                                                                       // reduce
                                                                       // random variations in the
                                                                       // angle
-          cur_dir = getDir(Math.toDegrees(cur_theta));
-          switch (cur_dir) {
-            case ZERO:
-              delta_y = GRID_LENGTH;
-              double angle_zero = computeAngle(90 - Math.toDegrees(cur_theta));
-              delta_x = -1 * (delta_y * Math.sin(cur_theta)) / Math.sin(angle_zero);
-              break;
-            case NINETY:
-              delta_x = GRID_LENGTH;
-              double angle_ninety = computeAngle(90 - (Math.toDegrees(cur_theta) - 90));
-              delta_y = -1 * (delta_x * Math.sin(cur_theta - Math.PI / 2)) / Math.sin(angle_ninety);
-              break;
-            case ONEEIGHTY:
-              delta_y = -GRID_LENGTH;
-              double angle_oneeighty = computeAngle(90 - (Math.toDegrees(cur_theta) - 180));
-              delta_x =
-                  -1 * (delta_y * Math.sin(cur_theta - 2 * Math.PI)) / Math.sin(angle_oneeighty);
-              break;
-            case TWOSEVENTY:
-              delta_x = -GRID_LENGTH;
-              double angle_twoseventy = computeAngle(90 - (Math.toDegrees(cur_theta) - 270));
-              delta_y = -1 * (delta_x * Math.sin(cur_theta - (3 * Math.PI) / 2))
-                  / Math.sin(angle_twoseventy);
-              break;
-          }
-
-          setNewPos(prev_pos[0] + delta_x, prev_pos[1] + delta_y);
-        } else if (line_count == 0) {
-          // first time we cross a line means origin in y
-          odometer.setY(0.0);
-        } else if (line_count == 3) {
-          // When crossing the 4th line, origin in x
-          odometer.setX(0.0);
-        } else if (line_count == 8) {
-          // reached y = 0 again
-          odometer.setY(0.0);
-        } else if (line_count == 11) {
-          // reached x = 0 again
-          odometer.setX(0.0);
+          
+          //Crossed a line, add/subtract 1 from coordinate depending on direction
+          //Figure out the direction the robot is going using the intial calculated angle to the next waypoint and line distances
+          //We know we are starting at (0,0) initially
+          //Keep track of estimated traveled distance so that we can know what line we crossed
+          //(int)(pos/GRID_LENGTH) should give something along the lines of 0, 1, 2, 3, etc. (rounding down)
+          //Correct using grid lines and trigonometry
+          
+          /*
+           * cur_dir = getDir(Math.toDegrees(cur_theta)); switch (cur_dir) { case ZERO: delta_y =
+           * GRID_LENGTH; double angle_zero = computeAngle(90 - Math.toDegrees(cur_theta)); delta_x
+           * = -1 * (delta_y * Math.sin(cur_theta)) / Math.sin(angle_zero); break; case NINETY:
+           * delta_x = GRID_LENGTH; double angle_ninety = computeAngle(90 -
+           * (Math.toDegrees(cur_theta) - 90)); delta_y = -1 * (delta_x * Math.sin(cur_theta -
+           * Math.PI / 2)) / Math.sin(angle_ninety); break; case ONEEIGHTY: delta_y = -GRID_LENGTH;
+           * double angle_oneeighty = computeAngle(90 - (Math.toDegrees(cur_theta) - 180)); delta_x
+           * = -1 * (delta_y * Math.sin(cur_theta - 2 * Math.PI)) / Math.sin(angle_oneeighty);
+           * break; case TWOSEVENTY: delta_x = -GRID_LENGTH; double angle_twoseventy =
+           * computeAngle(90 - (Math.toDegrees(cur_theta) - 270)); delta_y = -1 * (delta_x *
+           * Math.sin(cur_theta - (3 * Math.PI) / 2)) / Math.sin(angle_twoseventy); break; }
+           * 
+           * setNewPos(prev_pos[0] + delta_x, prev_pos[1] + delta_y); } else if (line_count == 0) {
+           * // first time we cross a line means origin in y odometer.setY(0.0); } else if
+           * (line_count == 3) { // When crossing the 4th line, origin in x odometer.setX(0.0); }
+           * else if (line_count == 8) { // reached y = 0 again odometer.setY(0.0); } else if
+           * (line_count == 11) { // reached x = 0 again odometer.setX(0.0); }
+           */
+          updatePrevPos();
+          line_detected_time = System.currentTimeMillis(); // Capture the last time we crossed a
+                                                           // line.
+          line_count++;
         }
-        updatePrevPos();
-        line_detected_time = System.currentTimeMillis(); // Capture the last time we crossed a line.
-        line_count++;
-      }
-      prev_light_level = light_level;
+        prev_light_level = light_level;
 
-      // this ensure the odometry correction occurs only once every period
-      correctionEnd = System.currentTimeMillis();
-      if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
-        try {
-          Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
-        } catch (InterruptedException e) {
-          // there is nothing to be done here because it is not
-          // expected that the odometry correction will be
-          // interrupted by another thread
+        // this ensure the odometry correction occurs only once every period
+        correctionEnd = System.currentTimeMillis();
+        if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
+          try {
+            Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
+          } catch (InterruptedException e) {
+            // there is nothing to be done here because it is not
+            // expected that the odometry correction will be
+            // interrupted by another thread
+          }
         }
       }
     }

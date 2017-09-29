@@ -6,6 +6,7 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3ColorSensor;
@@ -14,41 +15,45 @@ import lejos.hardware.sensor.SensorMode;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
-public class OdometryLab {
+public class ObstacleAvoidanceLab {
 
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  
+  private static final EV3MediumRegulatedMotor sensorMotor = 
+      new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
 
   public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 15.75;
+  public static final double TRACK = 9.8;
 
   public static void main(String[] args) {
-    int buttonChoice;
+    int buttonChoice = -1;
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
-    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, odometryCorrection);
+    Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
+    Navigator nav = new Navigator(d);
+    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, odometryCorrection, nav);
 
     do {
       // clear the display
       t.clear();
 
       // ask the user whether the motors should drive in a square or float
-      t.drawString("< Left | Right >", 0, 0);
-      t.drawString("       |        ", 0, 1);
-      t.drawString(" Float | Drive  ", 0, 2);
-      t.drawString("motors | in a   ", 0, 3);
-      t.drawString("       | square ", 0, 4);
-
+      t.drawString("Left: Track 1", 0, 0);
+      t.drawString("Right: Track 2", 0, 1);
+      t.drawString("Up: Track 3", 0, 2);
+      t.drawString("Down: Track 4", 0, 3);
+      
       buttonChoice = Button.waitForAnyPress();
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT && buttonChoice != Button.ID_UP && buttonChoice != Button.ID_DOWN);
 
-    if (buttonChoice == Button.ID_LEFT) {
+    /*if (buttonChoice == Button.ID_LEFT) {
 
       leftMotor.forward();
       leftMotor.flt();
@@ -84,6 +89,19 @@ public class OdometryLab {
           SquareDriver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
         }
       }).start();
+    }*/
+    
+    if (buttonChoice != -1)  {
+      if (buttonChoice == Button.ID_ESCAPE) {
+        System.exit(0);
+      }
+      odometer.start();
+      odometryDisplay.start();
+      /*(new Thread() {
+        public void run() {
+          Driver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
+        }
+      }).start();*/
     }
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
