@@ -6,6 +6,7 @@ import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
+import lejos.robotics.filter.MeanFilter;
 
 // This is based on the code that was given for the first Lab (wallfollowing).
 // This is meant to detect obstacles using the ultrasonic sensor mounted on a medium motor
@@ -24,22 +25,26 @@ public class UltrasonicPoller extends Thread {
   private EV3MediumRegulatedMotor sensorMotor;
   private double motor_orientation;
   private SampleProvider us;
+  private SampleProvider mean;
   // private UltrasonicController cont;
   private float[] usData;
   // private Navigator nav;
   private volatile float distance = 0f;
 
+  private Navigator nav;
+
   public UltrasonicPoller(EV3MediumRegulatedMotor sensorMotor) {
-	  @SuppressWarnings("resource") // Because we don't bother to close this resource
-      SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
-      us = usSensor.getMode("Distance"); // usDistance provides samples from
-                                                                  // this instance
-      usData = new float[us.sampleSize()]; // usData is the buffer in which data are
-                                                              // returned
-      this.sensorMotor = sensorMotor;
-      sensorMotor.setSpeed(50);
-      motor_orientation = 0.0;
-	}
+    @SuppressWarnings("resource") // Because we don't bother to close this resource
+    SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
+    us = usSensor.getMode("Distance"); // usDistance provides samples from
+                                       // this instance
+    mean = new MeanFilter(us, us.sampleSize());
+    usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
+                                         // returned
+    this.sensorMotor = sensorMotor;
+    sensorMotor.setSpeed(50);
+    motor_orientation = 0.0;
+  }
 
   /*
    * Sensors now return floats using a uniform protocol. Need to convert US result to an integer
@@ -49,7 +54,7 @@ public class UltrasonicPoller extends Thread {
    */
   public void run() {
     while (true) {
-      us.fetchSample(usData, 0); // acquire data
+      mean.fetchSample(usData, 0); // acquire data
       distance = usData[0] * 100.0f; // extract from buffer, cast to int
       // cont.processUSData(distance); // now take action depending on value
       processData(distance);
@@ -65,16 +70,22 @@ public class UltrasonicPoller extends Thread {
       // That's an obstacle, we will do our thing.
       // Let the navigator know we have an obstacle in front of us and work with it to avoid the
       // obstacle.
-      Navigator.obstacle_detected = true;
-      if (motor_orientation != 45.0) {
-        sensorMotor.rotate(45, true);
-        motor_orientation = 45.0;
+      // System.out.println("[AVOIDING] Obstacle detected!!!!!");
+      if (!Navigator.obstacle_detected) {
+        Navigator.obstacle_detected = true;
+        if (motor_orientation != 45.0) {
+          sensorMotor.rotate(45, true);
+          sensorMotor.stop();
+          motor_orientation = 45.0;
+        }
       }
-    } else if (distance > 150) {
-      Navigator.obstacle_detected = false;
-      if (motor_orientation != 0.0) {
-        sensorMotor.rotate(-45, true);
-        motor_orientation = 0;
+    } else {
+      if (!Navigator.obstacle_detected) {
+        if (motor_orientation != 0.0) {
+          sensorMotor.rotate(-45, true);
+          sensorMotor.stop();
+          motor_orientation = 0.0;
+        }
       }
     }
   }
@@ -83,4 +94,7 @@ public class UltrasonicPoller extends Thread {
     return distance;
   }
 
+  public void setNav(Navigator n) {
+    nav = n;
+  }
 }

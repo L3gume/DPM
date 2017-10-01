@@ -7,12 +7,12 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 public class PController /* implements UltrasonicController */ {
   private Object lock;
   // member constants
-  private final int FILTER_COUNT = 30;
+  private final int FILTER_COUNT = 1;
   private final int FILTER_DISTANCE = 70;
   private final int MOTOR_SPEED = 150;
   private final int RIGHT_SCALE = 2;
   private final double ERROR_SCALE = 1.7;
-  private final int MAX_SPEED = 200;
+  private final int MAX_SPEED = 175;
   private final int ADJUST_COUNTER = 60;
 
   private final String TURN_RIGHT = "TURN_RIGHT";
@@ -27,15 +27,13 @@ public class PController /* implements UltrasonicController */ {
   private EV3LargeRegulatedMotor leftMotor, rightMotor;
 
   // member variables
-  private float distance;
+  private volatile float distance;
   private int filterControl;
   private float distError = 0;
-  private int distanceAdjust = 0;
   private int rightTurnSpeedMult = 1;
-  private int adjustCounter = 0;
+  private int adjustCounter = 20;
 
   private final int ARRAY_LENGTH = 5;
-  private int pastValues[] = new int[ARRAY_LENGTH];
 
   // Default Constructor
   public PController(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
@@ -48,17 +46,22 @@ public class PController /* implements UltrasonicController */ {
     this.rightMotor = rightMotor;
     this.filterControl = 0;
     this.status = NO_TURN;
+    lock = new Object();
   }
 
   public void processUSData(float sensorDistance) {
     // Filter used to delay when making big changes (ie sharp corners)
     // sensorDistance /= 1.3;
-    //synchronized (lock) {
-      if ((sensorDistance >= FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
+    synchronized (lock) {
+      if ((sensorDistance > FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
           || sensorDistance < 0) {
         // bad value, do not set the sensorDistance var, however do increment the filter
         // value
         this.filterControl++;
+        if (ObstacleAvoidanceLab.debug_mode) {
+          System.out.println("[PController] filterCount: " + filterControl + "/" + FILTER_COUNT);
+        }
+        this.distance = bandCenter;
       } else if (sensorDistance >= FILTER_DISTANCE) {
         // set sensorDistance to FILTER_DISTANCE
         this.filterControl = 0;
@@ -72,6 +75,7 @@ public class PController /* implements UltrasonicController */ {
 
 
       // If the distance is too high for too long, we're off track.
+
       if (distance > 25) {
         if (adjustCounter++ > ADJUST_COUNTER) {
           leftAdjust();
@@ -82,9 +86,13 @@ public class PController /* implements UltrasonicController */ {
         adjustCounter = 0;
       }
 
-      // Calculate the distance Error from the bandCenter
-      distError = (bandCenter - distanceAdjust) - (this.distance);
 
+      // Calculate the distance Error from the bandCenter
+      distError = bandCenter - distance;
+      if (ObstacleAvoidanceLab.debug_mode) {
+        System.out.println("[PController] Distance: " + distance);
+        System.out.println("[PController] Dist Error: " + distError);
+      }
       // Compute motor correction speeds (variableRate)
       float variableRate = (float) (ERROR_SCALE * Math.abs(distError));
 
@@ -109,7 +117,11 @@ public class PController /* implements UltrasonicController */ {
         turnLeft(variableRate);
         setStatus(TURN_LEFT);
       }
-    //}
+    }
+
+    if (ObstacleAvoidanceLab.debug_mode) {
+      System.out.println("[PController] Status: " + status);
+    }
   }
 
 

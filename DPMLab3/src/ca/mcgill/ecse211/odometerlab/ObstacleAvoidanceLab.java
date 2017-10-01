@@ -15,8 +15,11 @@ import lejos.hardware.sensor.SensorMode;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
+
 public class ObstacleAvoidanceLab {
 
+  public static boolean debug_mode = false;
+  
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 

@@ -77,8 +77,6 @@ public class Driver {
   }
   
   public void avoidObstacle(float dist) {
-    rightMotor.forward();
-    leftMotor.forward();
     pCont.processUSData(dist);
   }
 
