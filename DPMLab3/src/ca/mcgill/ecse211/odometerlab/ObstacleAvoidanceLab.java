@@ -38,7 +38,8 @@ public class ObstacleAvoidanceLab {
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-    Navigator nav = new Navigator(d, odometer);
+    UltrasonicPoller u = new UltrasonicPoller(sensorMotor);
+    Navigator nav = new Navigator(d, odometer, u);
     OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, odometryCorrection, nav);
 
     do {
@@ -103,6 +104,7 @@ public class ObstacleAvoidanceLab {
       odometer.start();
       odometryDisplay.start();
       nav.start();
+      u.start();
       /*(new Thread() {
         public void run() {
           Driver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);

@@ -1,9 +1,11 @@
-package ca.mcgill.ecse211.wallfollowing;
+package ca.mcgill.ecse211.odometerlab;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-public class PController implements UltrasonicController {
 
+// Code taken from Lab1 and slightly modified.
+public class PController /* implements UltrasonicController */ {
+  private Object lock;
   // member constants
   private final int FILTER_COUNT = 30;
   private final int FILTER_DISTANCE = 70;
@@ -25,9 +27,9 @@ public class PController implements UltrasonicController {
   private EV3LargeRegulatedMotor leftMotor, rightMotor;
 
   // member variables
-  private int distance;
+  private float distance;
   private int filterControl;
-  private int distError = 0;
+  private float distError = 0;
   private int distanceAdjust = 0;
   private int rightTurnSpeedMult = 1;
   private int adjustCounter = 0;
@@ -46,81 +48,75 @@ public class PController implements UltrasonicController {
     this.rightMotor = rightMotor;
     this.filterControl = 0;
     this.status = NO_TURN;
-
-    // Start rolling!
-    leftMotor.setSpeed(MOTOR_SPEED);
-    rightMotor.setSpeed(MOTOR_SPEED);
-    leftMotor.forward();
-    rightMotor.forward();
   }
 
-  public void processUSData(int sensorDistance) {
+  public void processUSData(float sensorDistance) {
     // Filter used to delay when making big changes (ie sharp corners)
     // sensorDistance /= 1.3;
+    //synchronized (lock) {
+      if ((sensorDistance >= FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
+          || sensorDistance < 0) {
+        // bad value, do not set the sensorDistance var, however do increment the filter
+        // value
+        this.filterControl++;
+      } else if (sensorDistance >= FILTER_DISTANCE) {
+        // set sensorDistance to FILTER_DISTANCE
+        this.filterControl = 0;
+        // this.distance = sensorDistance; //getAveragedReading(sensorDistance);
+        this.distance = 70; // Just set it to our threshold
+      } else if (sensorDistance > 0) {
+        // sensorDistance went below FILTER_DISTANCE, therefore reset everything.
+        this.filterControl = 0;
+        this.distance = sensorDistance; // getAveragedReading(sensorDistance);
+      }
 
-    if ((sensorDistance >= FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
-        || sensorDistance < 0) {
-      // bad value, do not set the sensorDistance var, however do increment the filter
-      // value
-      this.filterControl++;
-    } else if (sensorDistance >= FILTER_DISTANCE) {
-      // set sensorDistance to FILTER_DISTANCE
-      this.filterControl = 0;
-      // this.distance = sensorDistance; //getAveragedReading(sensorDistance);
-      this.distance = 70; // Just set it to our threshold
-    } else if (sensorDistance > 0) {
-      // sensorDistance went below FILTER_DISTANCE, therefore reset everything.
-      this.filterControl = 0;
-      this.distance = sensorDistance; // getAveragedReading(sensorDistance);
-    }
 
+      // If the distance is too high for too long, we're off track.
+      if (distance > 25) {
+        if (adjustCounter++ > ADJUST_COUNTER) {
+          leftAdjust();
+          setStatus(ADJUST_LEFT);
+          return;
+        }
+      } else {
+        adjustCounter = 0;
+      }
 
-    // If the distance is too high for too long, we're off track.
-    if (distance > 25) {
-      if (adjustCounter++ > ADJUST_COUNTER) {
-        leftAdjust();
-        setStatus(ADJUST_LEFT);
+      // Calculate the distance Error from the bandCenter
+      distError = (bandCenter - distanceAdjust) - (this.distance);
+
+      // Compute motor correction speeds (variableRate)
+      float variableRate = (float) (ERROR_SCALE * Math.abs(distError));
+
+      if (distance >= 0 && distance < 10) {
+        backward();
+        setStatus(BACKWARDS);
         return;
       }
-    } else {
-      adjustCounter = 0;
-    }
 
-    // Calculate the distance Error from the bandCenter
-    distError = (bandCenter - distanceAdjust) - (this.distance);
+      // Travel straight
+      if (Math.abs(distError) <= bandwidth) {
+        forward();
+        setStatus(NO_TURN);
+      } else if (distError > 0) {
 
-    // Compute motor correction speeds (variableRate)
-    float variableRate = (float) (ERROR_SCALE * Math.abs(distError));
+        // RIGHT_SCALE accounts for distError being disproportional from one side to the
+        // other side of the bandCenter
+        turnRight(variableRate);
+        setStatus(TURN_RIGHT);
+      } else if (distError < 0) {
 
-    if (distance >= 0 && distance < 10) {
-      backward();
-      setStatus(BACKWARDS);
-      return;
-    }
-
-    // Travel straight
-    if (Math.abs(distError) <= bandwidth) {
-      forward();
-      setStatus(NO_TURN);
-    } else if (distError > 0) {
-
-      // RIGHT_SCALE accounts for distError being disproportional from one side to the
-      // other side of the bandCenter
-      turnRight(variableRate);
-      setStatus(TURN_RIGHT);
-    } else if (distError < 0) {
-
-      turnLeft(variableRate);
-      setStatus(TURN_LEFT);
-    }
+        turnLeft(variableRate);
+        setStatus(TURN_LEFT);
+      }
+    //}
   }
 
-  @Override
-  public int readUSDistance() {
+
+  public float readUSDistance() {
     return this.distance;
   }
 
-  @Override
   public String getStatus() {
     return status;
   }
@@ -212,26 +208,6 @@ public class PController implements UltrasonicController {
     rightMotor.setSpeed(175);
     leftMotor.forward();
     rightMotor.forward();
-  }
-
-  public int getAveragedReading(int val) {
-    int sum = 0, j = 0;
-    for (int i = 0; i < pastValues.length - 1; i++) {
-      if (pastValues[i] != 0) {
-        j++;
-        sum += pastValues[i];
-      }
-      pastValues[i + 1] = pastValues[i];
-    }
-
-    pastValues[0] = val;
-
-    if (j == 0) {
-      j = 1;
-    }
-
-    int avg = (int) ((sum + val) / j);
-    return Math.min(255, Math.abs(avg));
   }
 
 }

@@ -4,9 +4,10 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class Odometer extends Thread {
   // robot position
-  private double x; // Position in X axis
-  private double y; // Position in Y axis
-  private double theta; // Heading
+  // Give volatile so that every access will be synchronized
+  private volatile double x; // Position in X axis
+  private volatile double y; // Position in Y axis
+  private volatile double theta; // Heading
   private int leftMotorTachoCount;
   private int rightMotorTachoCount;
   private EV3LargeRegulatedMotor leftMotor;
@@ -63,7 +64,6 @@ public class Odometer extends Thread {
         /**
          * Don't use the variables x, y, or theta anywhere but here! Only update the values of x, y,
          * and theta in this block. Do not perform complex math
-         * 
          */
 
         // Update theta
@@ -71,7 +71,6 @@ public class Odometer extends Thread {
 
         double delta_x = delta_dist * Math.cos(getTheta());
         double delta_y = delta_dist * Math.sin(getTheta());
-
 
         // Update the position
         setX(getX() + delta_x);
