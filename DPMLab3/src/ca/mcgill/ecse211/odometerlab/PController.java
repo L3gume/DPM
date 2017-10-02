@@ -4,7 +4,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 
 // Code taken from Lab1 and slightly modified.
-public class PController /* implements UltrasonicController */ {
+public class PController {
   // member constants
   private final int FILTER_COUNT = 5;
   private final int FILTER_DISTANCE = 70;
@@ -13,13 +13,6 @@ public class PController /* implements UltrasonicController */ {
   private final double ERROR_SCALE = 1.7;
   private final int MAX_SPEED = 160;
   private final int ADJUST_COUNTER = 90;
-  
-  private final String TURN_RIGHT = "TURN_RIGHT";
-  private final String TURN_LEFT = "TURN_LEFT";
-  private final String NO_TURN = "NO_TURN";
-  private final String BACKWARDS = "BACKWARDS";
-  private final String ADJUST_LEFT = "ADJUST_LEFT";
-  private String status;
 
   // passed member constants
   private final int bandCenter, bandwidth;
@@ -31,105 +24,85 @@ public class PController /* implements UltrasonicController */ {
   private float distError = 0;
   private int rightTurnSpeedMult = 1;
   private int adjustCounter = 20;
-  
+
   // Default Constructor
   public PController(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       int bandCenter, int bandwidth) {
-
     // Initialize Member Variables
-    this.bandCenter = 30; // bandCenter;
-    this.bandwidth = 2;// bandwidth;
+    this.bandCenter = bandCenter;
+    this.bandwidth = bandwidth;
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
     this.filterControl = 0;
-    this.status = NO_TURN;
   }
 
   public void processUSData(float sensorDistance) {
     // Filter used to delay when making big changes (ie sharp corners)
     // sensorDistance /= 1.3;
-      if ((sensorDistance > FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
-          || sensorDistance < 0) {
-        // bad value, do not set the sensorDistance var, however do increment the filter
-        // value
-        this.filterControl++;
-        if (ObstacleAvoidanceLab.debug_mode) {
-          System.out.println("[PController] filterCount: " + filterControl + "/" + FILTER_COUNT);
-        }
-        this.distance = bandCenter;
-      } else if (sensorDistance >= FILTER_DISTANCE) {
-        // set sensorDistance to FILTER_DISTANCE
-        this.filterControl = 0;
-        // this.distance = sensorDistance; //getAveragedReading(sensorDistance);
-        this.distance = 70; // Just set it to our threshold
-      } else if (sensorDistance > 0) {
-        // sensorDistance went below FILTER_DISTANCE, therefore reset everything.
-        this.filterControl = 0;
-        this.distance = sensorDistance; // getAveragedReading(sensorDistance);
-      }
-
-
-      // If the distance is too high for too long, we're off track.
-
-      if (distance >= 30) {
-        if (adjustCounter++ > ADJUST_COUNTER) {
-          leftAdjust();
-          setStatus(ADJUST_LEFT);
-          return;
-        }
-      } else {
-        adjustCounter = 0;
-      }
-
-
-      // Calculate the distance Error from the bandCenter
-      distError = bandCenter - distance;
+    if ((sensorDistance > FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
+        || sensorDistance < 0) {
+      // bad value, do not set the sensorDistance var, however do increment the filter
+      // value
+      this.filterControl++;
       if (ObstacleAvoidanceLab.debug_mode) {
-        System.out.println("[PController] Distance: " + distance);
-        System.out.println("[PController] Dist Error: " + distError);
+        System.out.println("[PController] filterCount: " + filterControl + "/" + FILTER_COUNT);
       }
-      // Compute motor correction speeds (variableRate)
-      float variableRate = (float) (ERROR_SCALE * Math.abs(distError));
+      this.distance = bandCenter;
+    } else if (sensorDistance >= FILTER_DISTANCE) {
+      // set sensorDistance to FILTER_DISTANCE
+      this.filterControl = 0;
+      // this.distance = sensorDistance; //getAveragedReading(sensorDistance);
+      this.distance = 70; // Just set it to our threshold
+    } else if (sensorDistance > 0) {
+      // sensorDistance went below FILTER_DISTANCE, therefore reset everything.
+      this.filterControl = 0;
+      this.distance = sensorDistance; // getAveragedReading(sensorDistance);
+    }
 
-      if (distance >= 0 && distance < 10) {
-        backward();
-        setStatus(BACKWARDS);
+
+    // If the distance is too high for too long, we're off track.
+
+    if (distance >= 30) {
+      if (adjustCounter++ > ADJUST_COUNTER) {
+        leftAdjust();
         return;
       }
-
-      // Travel straight
-      if (Math.abs(distError) <= bandwidth) {
-        forward();
-        setStatus(NO_TURN);
-      } else if (distError > 0) {
-
-        // RIGHT_SCALE accounts for distError being disproportional from one side to the
-        // other side of the bandCenter
-        turnRight(variableRate);
-        setStatus(TURN_RIGHT);
-      } else if (distError < 0) {
-
-        turnLeft(variableRate);
-        setStatus(TURN_LEFT);
-      }
-    
-
-    if (ObstacleAvoidanceLab.debug_mode) {
-      System.out.println("[PController] Status: " + status);
+    } else {
+      adjustCounter = 0;
     }
-}
+
+
+    // Calculate the distance Error from the bandCenter
+    distError = bandCenter - distance;
+    if (ObstacleAvoidanceLab.debug_mode) {
+      System.out.println("[PController] Distance: " + distance);
+      System.out.println("[PController] Dist Error: " + distError);
+    }
+    // Compute motor correction speeds (variableRate)
+    float variableRate = (float) (ERROR_SCALE * Math.abs(distError));
+
+    if (distance >= 0 && distance < 10) {
+      backward();
+      return;
+    }
+
+    // Travel straight
+    if (Math.abs(distError) <= bandwidth) {
+      forward();
+    } else if (distError > 0) {
+
+      // RIGHT_SCALE accounts for distError being disproportional from one side to the
+      // other side of the bandCenter
+      turnRight(variableRate);
+    } else if (distError < 0) {
+
+      turnLeft(variableRate);
+    }
+  }
 
 
   public float readUSDistance() {
     return this.distance;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  private void setStatus(String s) {
-    status = s;
   }
 
   private void turnRight(float variableRate) {

@@ -12,14 +12,8 @@ import lejos.robotics.filter.MeanFilter;
 // This is meant to detect obstacles using the ultrasonic sensor mounted on a medium motor
 // so we can scan for obstacles in multiple directions.
 
-/**
- * Control of the wall follower is applied periodically by the UltrasonicPoller thread. The while
- * loop at the bottom executes in a loop. Assuming that the us.fetchSample, and cont.processUSData
- * methods operate in about 20mS, and that the thread sleeps for 50 mS at the end of each loop, then
- * one cycle through the loop is approximately 70 mS. This corresponds to a sampling rate of 1/70mS
- * or about 14 Hz.
- */
 public class UltrasonicPoller extends Thread {
+  // Ultrasonic sensor port.
   private static final Port usPort = LocalEV3.get().getPort("S2");
 
   private EV3MediumRegulatedMotor sensorMotor;
@@ -29,9 +23,11 @@ public class UltrasonicPoller extends Thread {
   // private UltrasonicController cont;
   private float[] usData;
   // private Navigator nav;
-  private volatile float distance = 0f;
+  private float distance = 0f;
 
-  private Navigator nav;
+  private Navigation nav;
+
+  private Object lock;
 
   public UltrasonicPoller(EV3MediumRegulatedMotor sensorMotor) {
     @SuppressWarnings("resource") // Because we don't bother to close this resource
@@ -43,6 +39,8 @@ public class UltrasonicPoller extends Thread {
     // returned
     this.sensorMotor = sensorMotor;
     sensorMotor.setSpeed(50);
+
+    lock = new Object();
   }
 
   /*
@@ -108,10 +106,13 @@ public class UltrasonicPoller extends Thread {
   }
 
   public float getDistance() {
-    return distance;
+    // guarantee exclusive access to the variable since it is continuously being written to.
+    synchronized (lock) {
+      return distance;
+    }
   }
 
-  public void setNav(Navigator n) {
+  public void setNav(Navigation n) {
     nav = n;
   }
 }

@@ -1,5 +1,3 @@
-// Lab2.java
-
 package ca.mcgill.ecse211.odometerlab;
 
 import lejos.hardware.Button;
@@ -7,17 +5,13 @@ import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
-import lejos.hardware.port.MotorPort;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
 
+/*
+ * Lab 3, ECSE211, Obtacle avoidance
+ */
 
 public class ObstacleAvoidanceLab {
-
+  // Enables printing to the remote console.
   public static boolean debug_mode = false;
   
   private static final EV3LargeRegulatedMotor leftMotor =
@@ -39,11 +33,10 @@ public class ObstacleAvoidanceLab {
     final TextLCD t = LocalEV3.get().getTextLCD();
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
-    //OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
     UltrasonicPoller u = new UltrasonicPoller(sensorMotor);
-    Navigator nav = new Navigator(d, odometer, u);
-    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, /*odometryCorrection,*/ nav);
+    Navigation nav = new Navigation(d, odometer, u);
+    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, nav);
 
     do {
       // clear the display
@@ -57,44 +50,6 @@ public class ObstacleAvoidanceLab {
       
       buttonChoice = Button.waitForAnyPress();
     } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT && buttonChoice != Button.ID_UP && buttonChoice != Button.ID_DOWN);
-
-    /*if (buttonChoice == Button.ID_LEFT) {
-
-      leftMotor.forward();
-      leftMotor.flt();
-      rightMotor.forward();
-      rightMotor.flt();
-
-      odometer.start();
-      odometryDisplay.start();
-
-    } else {
-      // clear the display
-      t.clear();
-
-      // ask the user whether the motors should drive in a square or float
-      t.drawString("< Left | Right >", 0, 0);
-      t.drawString("  No   | with   ", 0, 1);
-      t.drawString(" corr- | corr-  ", 0, 2);
-      t.drawString(" ection| ection ", 0, 3);
-      t.drawString("       |        ", 0, 4);
-
-      buttonChoice = Button.waitForAnyPress();
-
-      odometer.start();
-      odometryDisplay.start();
-
-      if (buttonChoice == Button.ID_RIGHT) {
-        odometryCorrection.start();
-      }
-
-      // spawn a new Thread to avoid SquareDriver.drive() from blocking
-      (new Thread() {
-        public void run() {
-          SquareDriver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-        }
-      }).start();
-    }*/
     
     if (buttonChoice != -1)  {
       switch (buttonChoice) {

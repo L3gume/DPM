@@ -6,19 +6,21 @@ package ca.mcgill.ecse211.odometerlab;
 
 import lejos.hardware.lcd.TextLCD;
 
+
+/*
+ * Code taken from previous labs.
+ */
 public class OdometryDisplay extends Thread {
   private static final long DISPLAY_PERIOD = 250;
   private Odometer odometer;
   private TextLCD t;
 
-  //private OdometryCorrection correction;
-  private Navigator nav;
+  private Navigation nav;
 
   // constructor
-  public OdometryDisplay(Odometer odometer, TextLCD t,/* OdometryCorrection cor,*/ Navigator n) {
+  public OdometryDisplay(Odometer odometer, TextLCD t, Navigation n) {
     this.odometer = odometer;
     this.t = t;
-    //this.correction = cor;
     this.nav = n;
   }
 
@@ -46,9 +48,7 @@ public class OdometryDisplay extends Thread {
         t.drawString(formattedDoubleToString(position[i], 2), 3, i);
       }
 
-     // t.drawString("Light level: " + correction.getLightLevel(), 0, 4);
-     // t.drawString("Line count: " + correction.getLineCount(), 0, 5);
-      t.drawString("" + nav.getCurrentState(), 0, 6);
+      t.drawString("" + nav.getCurrentState(), 0, 6); // Display the current state of the Navigator
 
       // throttle the OdometryDisplay
       displayEnd = System.currentTimeMillis();

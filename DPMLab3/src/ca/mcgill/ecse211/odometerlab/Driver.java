@@ -29,7 +29,7 @@ public class Driver {
     this.rightRadius = rightRadius;
     this.width = width;
     
-    pCont = new PController(leftMotor, rightMotor, 20, 3);
+    pCont = new PController(leftMotor, rightMotor, 30, 2);
     
     leftMotor.setAcceleration(3000);
     rightMotor.setAcceleration(3000);
@@ -58,7 +58,7 @@ public class Driver {
     }
   }
   
-  public void gotoPos(double dist) {
+  public void moveTo(double dist) {
     leftMotor.setAcceleration(3000);
     rightMotor.setAcceleration(3000);
     leftMotor.setSpeed(FORWARD_SPEED);
