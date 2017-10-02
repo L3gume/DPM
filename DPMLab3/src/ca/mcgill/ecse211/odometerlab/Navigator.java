@@ -14,13 +14,13 @@ public class Navigator extends Thread {
   public static final double SQUARE_LENGTH = 30.48;
 
   public enum state {
-    IDLE, COMPUTING, ROTATING, MOVING_STRAIGHT, MOVING_AVOIDING, REACHED_POINT
+    IDLE, COMPUTING, ROTATING, MOVING, AVOIDING, REACHED_POINT
   }
 
   private state cur_state = state.IDLE;
 
   Odometer odo;
-  OdometryCorrection corr;
+  // OdometryCorrection corr;
   UltrasonicPoller uPoll;
   Driver driver;
 
@@ -48,10 +48,9 @@ public class Navigator extends Thread {
   /*
    * Obstacle avoidance variables
    */
-  // Public volatile variable that will be changed by the ultrasonic poller to tell the navigator
-  // there is an obstacle.
-  public static volatile boolean obstacle_detected = false;
+  private boolean obstacle_detected = false;
   private boolean obstacle_avoided = true;
+  public Object lock;
 
   public Navigator(Driver driver, Odometer odo, UltrasonicPoller uPoll) {
     this.driver = driver;
@@ -60,6 +59,7 @@ public class Navigator extends Thread {
     this.odo = odo;
     this.uPoll = uPoll;
 
+    lock = new Object();
     uPoll.setNav(this);
   }
 
@@ -80,10 +80,10 @@ public class Navigator extends Thread {
         case ROTATING:
           cur_state = process_rotating();
           break;
-        case MOVING_STRAIGHT:
+        case MOVING:
           cur_state = process_movingstraight();
           break;
-        case MOVING_AVOIDING:
+        case AVOIDING:
           cur_state = process_movingavoiding();
           break;
         case REACHED_POINT:
@@ -94,11 +94,23 @@ public class Navigator extends Thread {
           break;
       }
 
-      if (obstacle_detected && cur_state != state.MOVING_AVOIDING) {
-        // The ultrasonic poller has detected an obstacle.
+      /**
+       * Obstacle detectection
+       * 
+       * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
+       * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
+       */
+      if (getObstacleDetected() && cur_state != state.AVOIDING
+          && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
+        // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
+        // than 15 degrees)
         // Immediately abort current action and avoid the obstacle.
-        //driver.rotate(Math.toRadians(-90));
-        cur_state = state.MOVING_AVOIDING;
+        cur_state = state.AVOIDING;
+      } else if (getObstacleDetected() && cur_state != state.AVOIDING
+          && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
+        // An obstacle has been detected but it isn't in my way, ignore it and set obstacle detected
+        // back to false;
+        setObstacleDetected(false);
       }
       if (ObstacleAvoidanceLab.debug_mode) {
         // updateTargetInfo();
@@ -143,7 +155,7 @@ public class Navigator extends Thread {
     if (Math.abs(angle_to_target_pos) > 0) {
       return state.ROTATING;
     } else if (dist_to_target_pos > 0) {
-      return state.MOVING_STRAIGHT;
+      return state.MOVING;
     }
 
     return state.IDLE;
@@ -158,7 +170,7 @@ public class Navigator extends Thread {
       // driver.stop();
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         min_dist = Double.MAX_VALUE; // reset
-        return state.MOVING_STRAIGHT;
+        return state.MOVING;
       } else {
         return state.REACHED_POINT; // if angle AND distance are both small enough, we reached the
                                     // point.
@@ -174,7 +186,7 @@ public class Navigator extends Thread {
       min_dist = dist_to_target_pos;
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         driver.gotoPos(dist_to_target_pos);
-        return state.MOVING_STRAIGHT;
+        return state.MOVING;
       } else {
         // Find some way of confirming that we are at the right position
         return state.REACHED_POINT;
@@ -191,17 +203,17 @@ public class Navigator extends Thread {
     // NOT IMPLEMENTED YET
     // Synchronized access to the distance since it is volatile.
     float dist = uPoll.getDistance();
-   // if (ObstacleAvoidanceLab.debug_mode) {
+    if (ObstacleAvoidanceLab.debug_mode) {
       System.out.println("[AVOIDING] Obstacle distance: " + dist);
-    //}
+    }
     driver.avoidObstacle(dist);
 
     obstacle_avoided =
         (Math.abs(angle_to_target_pos) < ANGLE_THRESHOLD && dist > 150) ? true : false;
     if (obstacle_avoided) {
-      obstacle_detected = false;
+      setObstacleDetected(false);
     }
-    return obstacle_detected && !obstacle_avoided ? state.MOVING_AVOIDING : state.ROTATING;
+    return getObstacleDetected() && !obstacle_avoided ? state.AVOIDING : state.ROTATING;
   }
 
   private state process_reachedpoint() {
@@ -211,7 +223,7 @@ public class Navigator extends Thread {
       target_pos = getNextWaypoint();
       return state.COMPUTING;
     } else {
-      return state.MOVING_STRAIGHT; // Will have to improve this.
+      return state.MOVING; // Will have to improve this.
     }
   }
 
@@ -339,19 +351,37 @@ public class Navigator extends Thread {
         break;
     }
   }
-
-  private double computeAngle(double t_rad) {
-    double t_deg = Math.toDegrees(t_rad);
-    if (t_deg > 359.99999999 && t_deg >= 0) {
-      t_deg = t_deg - 360;
-    } else if (t_deg < 0) {
-      t_deg = 360 + t_deg;
-    }
-
-    return Math.toRadians(t_deg);
-  }
-
+  
+  
   public double getAngleToPos() {
     return angle_to_target_pos;
+  }
+
+  /*
+   * These two methods are meant to guarantee locked access to the obstacle_detected variable for
+   * both the navigator and the ultrasonic poller
+   */
+
+  /**
+   * Returns whether or not an obstacle has been detected,
+   * 
+   * @return
+   * boolean obstacle_detected
+   */
+  public boolean getObstacleDetected() {
+    synchronized (lock) {
+      return obstacle_detected;
+    }
+  }
+
+  /**
+   * Sets the value of the obstacle_detected variable.
+   * 
+   * @param arg
+   */
+  public void setObstacleDetected(boolean arg) {
+    synchronized (lock) {
+      obstacle_detected = arg;
+    }
   }
 }

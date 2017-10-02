@@ -23,7 +23,7 @@ public class UltrasonicPoller extends Thread {
   private static final Port usPort = LocalEV3.get().getPort("S2");
 
   private EV3MediumRegulatedMotor sensorMotor;
-  private double motor_orientation;
+  private boolean motor_rotated = false;
   private SampleProvider us;
   private SampleProvider mean;
   // private UltrasonicController cont;
@@ -40,10 +40,9 @@ public class UltrasonicPoller extends Thread {
                                        // this instance
     mean = new MeanFilter(us, us.sampleSize());
     usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
-                                         // returned
+    // returned
     this.sensorMotor = sensorMotor;
     sensorMotor.setSpeed(50);
-    motor_orientation = 0.0;
   }
 
   /*
@@ -65,28 +64,46 @@ public class UltrasonicPoller extends Thread {
     }
   }
 
+  /**
+   * processData
+   * 
+   * Continuously checks for the distance in front of the robot, a small distance means an obstacle
+   * in front of us. If an obstacle is detected, we rotate the ultrasonic sensor 50 degress to the
+   * left so that we can easily see the obstacle whle avoiding it.
+   * 
+   * 
+   * @param distance: Distance in centimeters.
+   *
+   */
   private void processData(float distance) {
     if (distance < 15) {
       // That's an obstacle, we will do our thing.
       // Let the navigator know we have an obstacle in front of us and work with it to avoid the
       // obstacle.
       // System.out.println("[AVOIDING] Obstacle detected!!!!!");
-      if (!Navigator.obstacle_detected) {
-        Navigator.obstacle_detected = true;
-        if (motor_orientation != 45.0) {
-          sensorMotor.rotate(45, true);
-          sensorMotor.stop();
-          motor_orientation = 45.0;
-        }
+      if (!nav.getObstacleDetected()) {
+        nav.setObstacleDetected(true);
+        setSensorPosition(true);
       }
     } else {
-      if (!Navigator.obstacle_detected) {
-        if (motor_orientation != 0.0) {
-          sensorMotor.rotate(-45, true);
-          sensorMotor.stop();
-          motor_orientation = 0.0;
-        }
+      if (!nav.getObstacleDetected()) {
+        setSensorPosition(false);
       }
+    }
+  }
+
+  /**
+   * Handles rotating the ultrasonic sensor. Puts it in the same position as in the PController lab.
+   */
+  private void setSensorPosition(boolean set) {
+    if (!motor_rotated && set) {
+      sensorMotor.rotate(50, false);
+      sensorMotor.stop();
+      motor_rotated = true;
+    } else if (motor_rotated && !set) {
+      sensorMotor.rotate(-50, false);
+      sensorMotor.stop();
+      motor_rotated = false;
     }
   }
 

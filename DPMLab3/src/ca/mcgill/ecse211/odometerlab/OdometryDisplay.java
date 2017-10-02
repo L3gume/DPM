@@ -11,14 +11,14 @@ public class OdometryDisplay extends Thread {
   private Odometer odometer;
   private TextLCD t;
 
-  private OdometryCorrection correction;
+  //private OdometryCorrection correction;
   private Navigator nav;
 
   // constructor
-  public OdometryDisplay(Odometer odometer, TextLCD t, OdometryCorrection cor, Navigator n) {
+  public OdometryDisplay(Odometer odometer, TextLCD t,/* OdometryCorrection cor,*/ Navigator n) {
     this.odometer = odometer;
     this.t = t;
-    this.correction = cor;
+    //this.correction = cor;
     this.nav = n;
   }
 
@@ -46,8 +46,8 @@ public class OdometryDisplay extends Thread {
         t.drawString(formattedDoubleToString(position[i], 2), 3, i);
       }
 
-      t.drawString("Light level: " + correction.getLightLevel(), 0, 4);
-      t.drawString("Line count: " + correction.getLineCount(), 0, 5);
+     // t.drawString("Light level: " + correction.getLightLevel(), 0, 4);
+     // t.drawString("Line count: " + correction.getLineCount(), 0, 5);
       t.drawString("" + nav.getCurrentState(), 0, 6);
 
       // throttle the OdometryDisplay

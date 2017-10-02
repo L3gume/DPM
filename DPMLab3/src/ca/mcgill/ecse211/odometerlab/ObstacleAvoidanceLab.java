@@ -39,11 +39,11 @@ public class ObstacleAvoidanceLab {
     final TextLCD t = LocalEV3.get().getTextLCD();
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
-    OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
+    //OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
     UltrasonicPoller u = new UltrasonicPoller(sensorMotor);
     Navigator nav = new Navigator(d, odometer, u);
-    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, odometryCorrection, nav);
+    OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, /*odometryCorrection,*/ nav);
 
     do {
       // clear the display

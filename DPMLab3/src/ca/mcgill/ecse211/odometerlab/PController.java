@@ -5,16 +5,15 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 // Code taken from Lab1 and slightly modified.
 public class PController /* implements UltrasonicController */ {
-  private Object lock;
   // member constants
-  private final int FILTER_COUNT = 1;
+  private final int FILTER_COUNT = 5;
   private final int FILTER_DISTANCE = 70;
   private final int MOTOR_SPEED = 150;
   private final int RIGHT_SCALE = 2;
   private final double ERROR_SCALE = 1.7;
-  private final int MAX_SPEED = 175;
-  private final int ADJUST_COUNTER = 60;
-
+  private final int MAX_SPEED = 160;
+  private final int ADJUST_COUNTER = 90;
+  
   private final String TURN_RIGHT = "TURN_RIGHT";
   private final String TURN_LEFT = "TURN_LEFT";
   private final String NO_TURN = "NO_TURN";
@@ -32,9 +31,7 @@ public class PController /* implements UltrasonicController */ {
   private float distError = 0;
   private int rightTurnSpeedMult = 1;
   private int adjustCounter = 20;
-
-  private final int ARRAY_LENGTH = 5;
-
+  
   // Default Constructor
   public PController(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       int bandCenter, int bandwidth) {
@@ -46,13 +43,11 @@ public class PController /* implements UltrasonicController */ {
     this.rightMotor = rightMotor;
     this.filterControl = 0;
     this.status = NO_TURN;
-    lock = new Object();
   }
 
   public void processUSData(float sensorDistance) {
     // Filter used to delay when making big changes (ie sharp corners)
     // sensorDistance /= 1.3;
-    synchronized (lock) {
       if ((sensorDistance > FILTER_DISTANCE && this.filterControl < FILTER_COUNT)
           || sensorDistance < 0) {
         // bad value, do not set the sensorDistance var, however do increment the filter
@@ -76,7 +71,7 @@ public class PController /* implements UltrasonicController */ {
 
       // If the distance is too high for too long, we're off track.
 
-      if (distance > 25) {
+      if (distance >= 30) {
         if (adjustCounter++ > ADJUST_COUNTER) {
           leftAdjust();
           setStatus(ADJUST_LEFT);
@@ -117,12 +112,12 @@ public class PController /* implements UltrasonicController */ {
         turnLeft(variableRate);
         setStatus(TURN_LEFT);
       }
-    }
+    
 
     if (ObstacleAvoidanceLab.debug_mode) {
       System.out.println("[PController] Status: " + status);
     }
-  }
+}
 
 
   public float readUSDistance() {
@@ -190,7 +185,7 @@ public class PController /* implements UltrasonicController */ {
     if (leftSpeed > 0) {
       leftMotor.forward();
     } else {
-      leftMotor.setSpeed(100);
+      leftMotor.setSpeed(120);
       leftMotor.forward();
     }
     if (rightSpeed > 0) {
@@ -216,8 +211,8 @@ public class PController /* implements UltrasonicController */ {
 
   private void leftAdjust() {
     // Actually using a proportional speed will almost never work in this case
-    leftMotor.setSpeed(50);
-    rightMotor.setSpeed(175);
+    leftMotor.setSpeed(40);
+    rightMotor.setSpeed(155);
     leftMotor.forward();
     rightMotor.forward();
   }
