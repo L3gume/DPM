@@ -10,6 +10,11 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
  * Lab 3, ECSE211, Obtacle avoidance
  */
 
+/**
+ * 
+ * @author Justin Tremblay
+ *
+ */
 public class ObstacleAvoidanceLab {
   // Enables printing to the remote console.
   public static boolean debug_mode = false;
