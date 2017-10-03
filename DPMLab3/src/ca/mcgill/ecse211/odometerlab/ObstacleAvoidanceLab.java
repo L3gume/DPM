@@ -20,7 +20,7 @@ public class ObstacleAvoidanceLab {
   public static boolean debug_mode = false;
   
   // Overrides the path choice and uses the reportPath (for data gathering for the lab report)
-  public static boolean report_path = true ;
+  public static boolean report_path = false ;
   
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
@@ -71,11 +71,6 @@ public class ObstacleAvoidanceLab {
       odometryDisplay.start();
       nav.start();
       u.start();
-      /*(new Thread() {
-        public void run() {
-          Driver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-        }
-      }).start();*/
     }
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
