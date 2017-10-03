@@ -18,6 +18,8 @@ public class Navigation extends Thread {
   static final Waypoint path4[] = {new Waypoint(0, 1), new Waypoint(1, 2), new Waypoint(1, 0),
       new Waypoint(2, 1), new Waypoint(2, 2)};
 
+  static final Waypoint reportPath[] = {new Waypoint(2, 1), new Waypoint(1, 1), new Waypoint(1, 2), new Waypoint(2, 0)};
+  
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
 
   // The list of possible states for the navigator.
@@ -36,7 +38,7 @@ public class Navigation extends Thread {
    */
 
   private final double ANGLE_THRESHOLD = Math.toRadians(5); // If the angle to target position is lower than 5 degrees, then that's good enough.
-  private final double DISTANCE_THRESHOLD = 3; // If the distance is below 3 cm, then that's good enough.
+  private final double DISTANCE_THRESHOLD = 2; // If the distance is below 3 cm, then that's good enough.
 
   /*
    * Navigation variables
@@ -388,6 +390,11 @@ public class Navigation extends Thread {
       default:
         this.path = path1;
         break;
+    }
+    
+    // Overwrite the choice if this is true.
+    if (ObstacleAvoidanceLab.report_path) {
+      this.path = reportPath;
     }
   }
 

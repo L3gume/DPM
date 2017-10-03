@@ -14,6 +14,9 @@ public class ObstacleAvoidanceLab {
   // Enables printing to the remote console.
   public static boolean debug_mode = false;
   
+  // Overrides the path choice and uses the reportPath (for data gathering for the lab report)
+  public static boolean report_path = true ;
+  
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 

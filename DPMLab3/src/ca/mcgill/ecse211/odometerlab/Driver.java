@@ -8,7 +8,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 // Taken from the last lab.
 
 public class Driver {
-  private static final int FORWARD_SPEED = 150;
+  private static final int FORWARD_SPEED = 200;
   private static final int ROTATE_SPEED = 75;
 
   PController pCont;
