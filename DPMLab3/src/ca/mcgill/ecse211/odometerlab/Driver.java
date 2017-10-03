@@ -46,19 +46,17 @@ public class Driver {
     rightMotor.setAcceleration(1000);
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);
-    /*leftMotor.forward();
-    rightMotor.forward();*/
+
     
     angle = Math.toDegrees(angle);
     
    if (angle < 0) {
       // turn right
-      //rotating = true;
       leftMotor.rotate(convertAngle(leftRadius, width, Math.abs(angle)), true);
       rightMotor.rotate(-convertAngle(rightRadius, width, Math.abs(angle)), true);
     } else {
       // turn left
-      //rotating = true;
+     
       leftMotor.rotate(-convertAngle(leftRadius, width, Math.abs(angle)), true);
       rightMotor.rotate(convertAngle(rightRadius, width, Math.abs(angle)), true);
     }
@@ -70,8 +68,7 @@ public class Driver {
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
     
-    //leftMotor.forward();
-    //rightMotor.forward();
+ 
 
     leftMotor.rotate(convertDistance(leftRadius, dist), true);
     rightMotor.rotate(convertDistance(rightRadius, dist), true);
