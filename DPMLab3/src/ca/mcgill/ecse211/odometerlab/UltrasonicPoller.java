@@ -78,7 +78,6 @@ public class UltrasonicPoller extends Thread {
       // That's an obstacle, we will do our thing.
       // Let the navigator know we have an obstacle in front of us and work with it to avoid the
       // obstacle.
-      // System.out.println("[AVOIDING] Obstacle detected!!!!!");
       if (!nav.getObstacleDetected()) {
         nav.setObstacleDetected(true);
         setSensorPosition(true);

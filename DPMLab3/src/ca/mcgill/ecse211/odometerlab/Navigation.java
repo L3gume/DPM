@@ -1,9 +1,15 @@
 package ca.mcgill.ecse211.odometerlab;
 
 /*
- * READ THE README.md FILE!!!!! It contains info about the inplementation of the Navigator
+ * READ THE README.md FILE!!!!! It contains info about the implementation of the Navigator
  */
 
+/**
+ * Class that handles navigating the robot.
+ * 
+ * @author Justin Tremblay
+ *
+ */
 public class Navigation extends Thread {
 
   /*
@@ -27,6 +33,9 @@ public class Navigation extends Thread {
 
   private state cur_state = state.IDLE; // The current state of the navigator, starts at IDLE.
 
+  /*
+   * References to other classes
+   */
   Odometer odo;
   UltrasonicPoller uPoll;
   Driver driver;
@@ -44,32 +53,28 @@ public class Navigation extends Thread {
   
   private boolean navigating; // This is here only because the lab outline asks for it. It's completely useless.
   
-  Waypoint[] path;
-  Waypoint current_pos;
-  Waypoint target_pos = null;
+  Waypoint[] path; // The set of waypoints the robot will have to travel, initialized by the setPath() method.
+  Waypoint target_pos = null; // Target waypoint
   int waypoint_progress = -1; // A counter to keep track of our progress (indexing the path array)
-  double angle_to_target_pos;
-  double dist_to_target_pos;
+  double angle_to_target_pos; // Angle between the robot's direction and the target waypoint.
+  double dist_to_target_pos; // Distance to target waypoint.
   double orientation_vect[] = {0.0, 1.0}; // we initially start with a theta of 90 degrees.
   double orientation_angle = 90.0; // we initially start with a theta of 90 degrees.
-  double min_dist;
-  boolean done = false;
+  double min_dist; // Used while moving, we constantly record the new lowest distance to the target point, when it starts going back up, we know we went past the waypoint.
+  boolean done = false; // This will be set to true when we reach the last waypoint, making to program end the navigation thread.
 
   /*
    * Obstacle avoidance variables
    */
   private boolean obstacle_detected = false;
   private boolean obstacle_avoided = true;
-  public Object lock;
 
   public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll) {
     this.driver = driver;
-    current_pos = new Waypoint(0, 0);
     path = new Waypoint[5];
     this.odo = odo;
     this.uPoll = uPoll;
 
-    lock = new Object();
     uPoll.setNav(this);
     
     min_dist = Double.MAX_VALUE;
@@ -159,8 +164,8 @@ public class Navigation extends Thread {
    * Process methods
    * 
    * These methods are executed depending on the current state of the navigator.
+   * They process the current state and return the new state, or the same if it's not done.
    */
-
   private state process_idle() {
     // Being idle means we just started, intialize stuff and get started.
     target_pos = getNextWaypoint(); // Get the next waypoint in the array, the first one in this
@@ -168,6 +173,7 @@ public class Navigation extends Thread {
     if (target_pos != null) {
       return state.COMPUTING;
     }
+    // Fallthrough, go back to IDLE if we don't have a target position
     return state.IDLE;
   }
 
@@ -185,22 +191,24 @@ public class Navigation extends Thread {
       return state.MOVING;
     }
 
+    // Fallthrough, shouldn't happen.
     return state.IDLE;
   }
 
   private state process_rotating() {
     updateTargetInfo();
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
+      // As long as the angle to the target position is bigger than the threshold, keep rotating.
       driver.rotate(angle_to_target_pos);
       return state.ROTATING;
     } else {
-      // driver.stop();
+      // If our angle is smaller than the threshold, then we can move, start moving!
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         min_dist = Double.MAX_VALUE; // reset
         return state.MOVING;
       } else {
-        return state.REACHED_POINT; // if angle AND distance are both small enough, we reached the
-                                    // point.
+    	// if angle AND distance are both small enough, we reached the point (happens rarely from the ROTATING state).
+        return state.REACHED_POINT;
       }
     }
   }
@@ -215,32 +223,35 @@ public class Navigation extends Thread {
         driver.moveTo(dist_to_target_pos);
         return state.MOVING;
       } else {
-        // Find some way of confirming that we are at the right position
+    	// if angle AND distance are both small enough, we reached the point
         return state.REACHED_POINT;
       }
-      // }
     } else {
-      // We missed the point, turn around and get there!
+      // We missed the point (dist_to_target_pos > min_dist), turn around and get there!
       return state.ROTATING;
     }
   }
 
   private state process_avoiding() {
     updateTargetInfo();
-    float dist = uPoll.getDistance();
+    float dist = uPoll.getDistance(); // Get the distance to the obstacle so we can make a decision
     if (ObstacleAvoidanceLab.debug_mode) {
       System.out.println("[AVOIDING] Obstacle distance: " + dist);
     }
+    // No mather what, call the avoidObstacle method, which uses the PController.
     driver.avoidObstacle(dist);
 
+    // Determine if we did avoid the obstacle.
     obstacle_avoided =
         (Math.abs(angle_to_target_pos) < ANGLE_THRESHOLD && dist > 150) ? true : false;
     if (obstacle_avoided) {
       setObstacleDetected(false);
     }
+    // Return the right state depending on whether or not we did avoid the obstacle.
     return getObstacleDetected() && !obstacle_avoided ? state.AVOIDING : state.ROTATING;
   }
 
+  // Pretty self-explanatory
   private state process_reachedpoint() {
     updateTargetInfo();
     if (dist_to_target_pos < DISTANCE_THRESHOLD) {
@@ -342,7 +353,7 @@ public class Navigation extends Thread {
         System.out.println("Error: getting out of bounds of the path array");
       }
       done = true; // We are done here, we ran out of waypoints.
-      return new Waypoint(0, 0);
+      return null;
     }
     return path[++waypoint_progress];
   }
