@@ -144,7 +144,7 @@ public class Navigation extends Thread {
         setObstacleDetected(false);
       }
       if (ObstacleAvoidanceLab.debug_mode) {
-        // updateTargetInfo();
+      
         System.out.println("Status: " + cur_state);
       }
       

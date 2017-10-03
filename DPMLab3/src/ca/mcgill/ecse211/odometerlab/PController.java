@@ -61,12 +61,12 @@ public class PController {
     } else if (sensorDistance >= FILTER_DISTANCE) {
       // set sensorDistance to FILTER_DISTANCE
       this.filterControl = 0;
-      // this.distance = sensorDistance; //getAveragedReading(sensorDistance);
+      
       this.distance = 70; // Just set it to our threshold
     } else if (sensorDistance > 0) {
       // sensorDistance went below FILTER_DISTANCE, therefore reset everything.
       this.filterControl = 0;
-      this.distance = sensorDistance; // getAveragedReading(sensorDistance);
+      this.distance = sensorDistance; 
     }
 
     // If the distance is too high for too long, we're off track.

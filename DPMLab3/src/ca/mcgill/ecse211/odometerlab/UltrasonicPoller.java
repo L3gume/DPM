@@ -20,9 +20,7 @@ public class UltrasonicPoller extends Thread {
   private boolean motor_rotated = false;
   private SampleProvider us;
   private SampleProvider mean;
-  // private UltrasonicController cont;
   private float[] usData;
-  // private Navigator nav;
   private float distance = 0f;
 
   private Navigation nav;
