@@ -71,11 +71,7 @@ public class ObstacleAvoidanceLab {
       odometryDisplay.start();
       nav.start();
       u.start();
-      /*(new Thread() {
-        public void run() {
-          Driver.drive(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-        }
-      }).start();*/
+
     }
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
