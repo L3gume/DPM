@@ -282,10 +282,6 @@ public class Navigation extends Thread {
     return angle;
   }
 
-  /*
-   * private double dotProd(double u[], double v[]) { return u[0] * v[0] + u[1] * v[1]; }
-   */
-
   /**
    * Computes the magnitude of a vector
    * 
