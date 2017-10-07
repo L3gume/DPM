@@ -41,33 +41,39 @@ public class LocalizationLab {
     do {
       // clear the display
       t.clear();
+			      // ask the user whether the motors should drive in a square or float
 
-      // ask the user whether the motors should drive in a square or float
-      t.drawString("Left: Track 1", 0, 0);
-      t.drawString("Right: Track 2", 0, 1);
-      t.drawString("Up: Track 3", 0, 2);
-      t.drawString("Down: Track 4", 0, 3);
-      
-      buttonChoice = Button.waitForAnyPress();
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT && buttonChoice != Button.ID_UP && buttonChoice != Button.ID_DOWN);
-    
-    if (buttonChoice != -1)  {
-      switch (buttonChoice) {
-        case Button.ID_LEFT: nav.setPath(1); break;
-        case Button.ID_RIGHT: nav.setPath(2); break;
-        case Button.ID_UP: nav.setPath(3); break;
-        case Button.ID_DOWN: nav.setPath(4); break;
-        case Button.ID_ESCAPE: System.exit(0); break;
-      }
-      odometer.start();
-      odometryDisplay.start();
-      nav.start();
-      u.start();
-    }
+			      t.drawString("Rising Edge", 0, 0);
 
-    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-    System.exit(0);
+			      t.drawString("Falling Edge", 0, 1);
 
-  }
 
+			      buttonChoice = Button.waitForAnyPress();
+
+			    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+
+			
+		   switch (buttonChoice) {
+
+			case Button.ID_LEFT: // Bang-bang control selected
+
+				usPoller = new UltrasonicPoller(usDistance, usData, bangbangController);
+
+
+				break;
+
+			case Button.ID_RIGHT: // Proportional control selected
+
+				usPoller = new UltrasonicPoller(usDistance, usData, pController);
+
+				break;
+
+
+			}
+
+
+			    
+
+	}
 }
+
