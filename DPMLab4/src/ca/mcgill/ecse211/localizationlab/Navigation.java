@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.odometerlab;
+package ca.mcgill.ecse211.localizationlab;
 
 /*
  * READ THE README.md FILE!!!!! It contains info about the implementation of the Navigator
@@ -24,8 +24,9 @@ public class Navigation extends Thread {
   static final Waypoint path4[] = {new Waypoint(0, 1), new Waypoint(1, 2), new Waypoint(1, 0),
       new Waypoint(2, 1), new Waypoint(2, 2)};
 
-  static final Waypoint reportPath[] = {new Waypoint(2, 1), new Waypoint(1, 1), new Waypoint(1, 2), new Waypoint(2, 0)};
-  
+  static final Waypoint reportPath[] =
+      {new Waypoint(2, 1), new Waypoint(1, 1), new Waypoint(1, 2), new Waypoint(2, 0)};
+
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
 
   // The list of possible states for the navigator.
@@ -46,24 +47,31 @@ public class Navigation extends Thread {
    * Navigation constants
    */
 
-  private final double ANGLE_THRESHOLD = Math.toRadians(5); // If the angle to target position is lower than 5 degrees, then that's good enough.
-  private final double DISTANCE_THRESHOLD = 2; // If the distance is below 3 cm, then that's good enough.
+  private final double ANGLE_THRESHOLD = Math.toRadians(5); // If the angle to target position is
+                                                            // lower than 5 degrees, then that's
+                                                            // good enough.
+  private final double DISTANCE_THRESHOLD = 2; // If the distance is below 3 cm, then that's good
+                                               // enough.
 
   /*
    * Navigation variables
    */
-  
-  private boolean navigating; // This is here only because the lab outline asks for it. It's completely useless.
-  
-  Waypoint[] path; // The set of waypoints the robot will have to travel, initialized by the setPath() method.
+
+  private boolean navigating; // This is here only because the lab outline asks for it. It's
+                              // completely useless.
+
+  Waypoint[] path; // The set of waypoints the robot will have to travel, initialized by the
+                   // setPath() method.
   Waypoint target_pos = null; // Target waypoint
   int waypoint_progress = -1; // A counter to keep track of our progress (indexing the path array)
   double angle_to_target_pos; // Angle between the robot's direction and the target waypoint.
   double dist_to_target_pos; // Distance to target waypoint.
   double orientation_vect[] = {0.0, 1.0}; // we initially start with a theta of 90 degrees.
   double orientation_angle = 90.0; // we initially start with a theta of 90 degrees.
-  double min_dist; // Used while moving, we constantly record the new lowest distance to the target point, when it starts going back up, we know we went past the waypoint.
-  boolean done = false; // This will be set to true when we reach the last waypoint, making to program end the navigation thread.
+  double min_dist; // Used while moving, we constantly record the new lowest distance to the target
+                   // point, when it starts going back up, we know we went past the waypoint.
+  boolean done = false; // This will be set to true when we reach the last waypoint, making to
+                        // program end the navigation thread.
 
   /*
    * Obstacle avoidance variables
@@ -73,12 +81,11 @@ public class Navigation extends Thread {
 
   public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll) {
     this.driver = driver;
-    path = new Waypoint[5];
     this.odo = odo;
     this.uPoll = uPoll;
 
     uPoll.setNav(this);
-    
+
     min_dist = Double.MAX_VALUE;
   }
 
@@ -143,13 +150,9 @@ public class Navigation extends Thread {
         // back to false;
         setObstacleDetected(false);
       }
-      if (ObstacleAvoidanceLab.debug_mode) {
-      
+      if (LocalizationLab.debug_mode) {
+
         System.out.println("Status: " + cur_state);
-      }
-      
-      if (done) {
-        break; // break out of the loop and end the thread if we are done.
       }
 
       navigating = (cur_state != state.IDLE) && (cur_state != state.AVOIDING);
@@ -165,8 +168,8 @@ public class Navigation extends Thread {
   /**
    * Process methods
    * 
-   * These methods are executed depending on the current state of the navigator.
-   * They process the current state and return the new state, or the same if it's not done.
+   * These methods are executed depending on the current state of the navigator. They process the
+   * current state and return the new state, or the same if it's not done.
    */
   private state process_idle() {
     // Being idle means we just started, intialize stuff and get started.
@@ -183,7 +186,7 @@ public class Navigation extends Thread {
     // Compute the distance and angle to the target position, if rotation is needed, set state to
     // rotating, if not: move.
     updateTargetInfo();
-    if (ObstacleAvoidanceLab.debug_mode) {
+    if (LocalizationLab.debug_mode) {
       System.out.println("Target position: " + target_pos.x + " " + target_pos.y);
     }
 
@@ -209,7 +212,8 @@ public class Navigation extends Thread {
         min_dist = Double.MAX_VALUE; // reset
         return state.MOVING;
       } else {
-    	// if angle AND distance are both small enough, we reached the point (happens rarely from the ROTATING state).
+        // if angle AND distance are both small enough, we reached the point (happens rarely from
+        // the ROTATING state).
         return state.REACHED_POINT;
       }
     }
@@ -220,12 +224,13 @@ public class Navigation extends Thread {
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
       return state.ROTATING; // We are a bit off, adjust.
     } else if (dist_to_target_pos < min_dist) {
-      min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance gets smaller.
+      min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance
+                                     // gets smaller.
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         driver.moveTo(dist_to_target_pos);
         return state.MOVING;
       } else {
-    	// if angle AND distance are both small enough, we reached the point
+        // if angle AND distance are both small enough, we reached the point
         return state.REACHED_POINT;
       }
     } else {
@@ -237,7 +242,7 @@ public class Navigation extends Thread {
   private state process_avoiding() {
     updateTargetInfo();
     float dist = uPoll.getDistance(); // Get the distance to the obstacle so we can make a decision
-    if (ObstacleAvoidanceLab.debug_mode) {
+    if (LocalizationLab.debug_mode) {
       System.out.println("[AVOIDING] Obstacle distance: " + dist);
     }
     // No mather what, call the avoidObstacle method, which uses the PController.
@@ -270,7 +275,9 @@ public class Navigation extends Thread {
    */
 
   /**
-   * Computes the angle between the robot and it's target position, from -180 to 180, so that the robot always makes the smallest turn possible.
+   * Computes the angle between the robot and it's target position, from -180 to 180, so that the
+   * robot always makes the smallest turn possible.
+   * 
    * @param vect_to_pos, a vector from the robot's position to the target position.
    * @return the angle between the two vectors, in radians.
    */
@@ -293,10 +300,10 @@ public class Navigation extends Thread {
   }
 
   /**
-   * Update all the information regarding out target position:
-   *    - Vector from robot's current position to target (using odometer and known measurements).
-   *    - The magnitude of that vector, the distance to our target.
-   *    - The angle to the traget position, using our orientation unit vector and the vector we just computed.
+   * Update all the information regarding out target position: - Vector from robot's current
+   * position to target (using odometer and known measurements). - The magnitude of that vector, the
+   * distance to our target. - The angle to the traget position, using our orientation unit vector
+   * and the vector we just computed.
    */
   private void updateTargetInfo() {
     double x = odo.getX();
@@ -309,7 +316,7 @@ public class Navigation extends Thread {
     dist_to_target_pos = magnitude(vect_to_target);
     angle_to_target_pos = angleToPos(vect_to_target);
 
-    if (ObstacleAvoidanceLab.debug_mode) {
+    if (LocalizationLab.debug_mode) {
       System.out.println("Current Position: " + x + ", " + y);
       System.out.println("Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
       System.out.println("Distance to target: " + dist_to_target_pos);
@@ -328,7 +335,7 @@ public class Navigation extends Thread {
     orientation_vect[0] = Math.cos(orientation_angle);
     orientation_vect[1] = Math.sin(orientation_angle);
 
-    if (ObstacleAvoidanceLab.debug_mode) {
+    if (LocalizationLab.debug_mode) {
       System.out.println("Orientation angle: " + Math.toDegrees(orientation_angle));
       System.out.println(
           "Orientation vector: [" + orientation_vect[0] + ", " + orientation_vect[1] + "]");
@@ -345,13 +352,15 @@ public class Navigation extends Thread {
    * @return the next waypoint in the path array.
    */
   private Waypoint getNextWaypoint() {
-    if (waypoint_progress + 1 >= path.length) {
-      // That's a problem
-      if (ObstacleAvoidanceLab.debug_mode) {
-        System.out.println("Error: getting out of bounds of the path array");
+    if (path != null) {
+      if (waypoint_progress + 1 >= path.length) {
+        // That's a problem
+        if (LocalizationLab.debug_mode) {
+          System.out.println("Error: getting out of bounds of the path array");
+        }
+        // wait for new path.
+        return null;
       }
-      done = true; // We are done here, we ran out of waypoints.
-      return null;
     }
     return path[++waypoint_progress];
   }
@@ -399,11 +408,11 @@ public class Navigation extends Thread {
         this.path = path1;
         break;
     }
-    
+
     // Overwrite the choice if this is true. This is for gathering data for the report.
-    if (ObstacleAvoidanceLab.report_path) {
-      this.path = reportPath;
-    }
+    /*
+     * if (LocalizationLab.report_path) { this.path = reportPath; }
+     */
   }
 
   /*
@@ -428,9 +437,9 @@ public class Navigation extends Thread {
   public synchronized void setObstacleDetected(boolean arg) {
     obstacle_detected = arg;
   }
-  
+
   // In there only because the lab asks for it.
   public synchronized boolean isNavigating() {
-    return navigating; 
+    return navigating;
   }
 }
