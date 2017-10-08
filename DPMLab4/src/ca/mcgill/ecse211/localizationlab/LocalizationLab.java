@@ -107,17 +107,18 @@ public class LocalizationLab {
         }
       }).start();
       
-      cp.start();
       odometer.start();
       odometryDisplay.start();
-      nav.start();
       u.start();
       ul.start();
       
       while (!ul.done);
+      cp.start();
+      while (!cp.isAlive()); // Make sure the color poller thread is alive before starting the localization.
       ll.start();
         
       while (!ll.done);
+      nav.start();
       nav.setNavigating(true);
       nav.setPath(new Waypoint[] {new Waypoint(0,0)});
       

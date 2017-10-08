@@ -12,8 +12,8 @@ public class LightLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
-  private final double SENSOR_OFFSET = 10.9; // The actual length won't give good results.
-  private final float LIGHT_THRESHOLD = 0.4f;
+  private final double SENSOR_OFFSET = 10.8f; // The actual length won't give good results.
+  private final float LIGHT_THRESHOLD = 0.37f;
 
   private int line_count = 0; // We will detect 4 lines in this lab
   private double[] angles = new double[4];
@@ -42,7 +42,7 @@ public class LightLocalizer extends Thread {
         System.out.println("Angle " + line_count + ": " + Math.toDegrees(theta));
       }
       
-      angles[line_count++] = theta; // Record the angle at which we detected the line.
+      angles[line_count++] = odo.getTheta(); // Record the angle at which we detected the line.
       
       sleepThread(0.5f); // wait for a second to avoid multiple detections of the same line.
     }
@@ -64,6 +64,7 @@ public class LightLocalizer extends Thread {
     double x_pos = -SENSOR_OFFSET * Math.cos(Math.toDegrees(angles[2] - angles[0]) / 2);
     double y_pos = -SENSOR_OFFSET * Math.cos(Math.toDegrees(angles[3] - angles[1]) / 2);
     
+    // Both negative.
     if (x_pos > 0) {
       x_pos *= -1;
     }
@@ -84,7 +85,7 @@ public class LightLocalizer extends Thread {
    * meaning we detected a line.
    */
   private void waitForLine() {
-    while (getLightLevel() > LIGHT_THRESHOLD && getLightLevel() != 0.f) {
+    while (getLightLevel() > LIGHT_THRESHOLD && getLightLevel() > 0.f) {
     } ;
     Sound.setVolume(70);
     Sound.beep();

@@ -20,7 +20,8 @@ public class UltrasonicPoller extends Thread {
   }
 
   public void run() {
-    while (true) {
+    // Terminate whenever the ultrasonic localizer is done to spare system resources.
+    while (!ul.done) {
         sample.fetchSample(usData, 0);
         // * 100 to convert to cm.
         ul.setDist(usData[0] * 100.f);

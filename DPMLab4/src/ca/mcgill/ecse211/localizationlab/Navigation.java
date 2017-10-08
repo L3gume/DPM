@@ -47,10 +47,10 @@ public class Navigation extends Thread {
    * Navigation constants
    */
 
-  private final double ANGLE_THRESHOLD = Math.toRadians(5); // If the angle to target position is
-                                                            // lower than 5 degrees, then that's
+  private final double ANGLE_THRESHOLD = Math.toRadians(2); // If the angle to target position is
+                                                            // lower than 2 degrees, then that's
                                                             // good enough.
-  private final double DISTANCE_THRESHOLD = 2; // If the distance is below 3 cm, then that's good
+  private final double DISTANCE_THRESHOLD = 1; // If the distance is below 1 cm, then that's good
                                                // enough.
 
   /*
