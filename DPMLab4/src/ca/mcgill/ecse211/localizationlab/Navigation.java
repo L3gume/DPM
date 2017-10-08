@@ -98,69 +98,71 @@ public class Navigation extends Thread {
    */
   public void run() {
     while (true) {
+      if (navigating) {
+        // To other stuff here
+        updateOrientation();
 
-      // To other stuff here
-      updateOrientation();
+        /*
+         * The base of the state machine.
+         * 
+         * This is where, depending on the current state, we choose a process_x method to continue
+         * our navigation. Each method has its specific conditions and outputs
+         */
+        switch (cur_state) {
+          case IDLE:
+            cur_state = process_idle();
+            break;
+          case COMPUTING:
+            cur_state = process_computing();
+            break;
+          case ROTATING:
+            cur_state = process_rotating();
+            break;
+          case MOVING:
+            cur_state = process_moving();
+            break;
+          case AVOIDING:
+            cur_state = process_avoiding();
+            break;
+          case REACHED_POINT:
+            cur_state = process_reachedpoint();
+            break;
+          // There should never be a default case
+          default:
+            break;
+        }
 
-      /*
-       * The base of the state machine.
-       * 
-       * This is where, depending on the current state, we choose a process_x method to continue our
-       * navigation. Each method has its specific conditions and outputs
-       */
-      switch (cur_state) {
-        case IDLE:
-          cur_state = process_idle();
-          break;
-        case COMPUTING:
-          cur_state = process_computing();
-          break;
-        case ROTATING:
-          cur_state = process_rotating();
-          break;
-        case MOVING:
-          cur_state = process_moving();
-          break;
-        case AVOIDING:
-          cur_state = process_avoiding();
-          break;
-        case REACHED_POINT:
-          cur_state = process_reachedpoint();
-          break;
-        // There should never be a default case
-        default:
-          break;
-      }
+        /**
+         * Obstacle detectection
+         * 
+         * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
+         * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
+         */
+        if (getObstacleDetected() && cur_state != state.AVOIDING
+            && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
+          // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
+          // than 15 degrees)
+          // Immediately abort current action and avoid the obstacle by setting the state to
+          // AVOIDING.
+          cur_state = state.AVOIDING;
+        } else if (getObstacleDetected() && cur_state != state.AVOIDING
+            && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
+          // An obstacle has been detected but it isn't in my way, ignore it and set obstacle
+          // detected
+          // back to false;
+          setObstacleDetected(false);
+        }
+        if (LocalizationLab.debug_mode) {
 
-      /**
-       * Obstacle detectection
-       * 
-       * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
-       * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
-       */
-      if (getObstacleDetected() && cur_state != state.AVOIDING
-          && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
-        // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
-        // than 15 degrees)
-        // Immediately abort current action and avoid the obstacle by setting the state to AVOIDING.
-        cur_state = state.AVOIDING;
-      } else if (getObstacleDetected() && cur_state != state.AVOIDING
-          && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
-        // An obstacle has been detected but it isn't in my way, ignore it and set obstacle detected
-        // back to false;
-        setObstacleDetected(false);
-      }
-      if (LocalizationLab.debug_mode) {
+          System.out.println("Status: " + cur_state);
+        }
 
-        System.out.println("Status: " + cur_state);
-      }
-
-      navigating = (cur_state != state.IDLE) && (cur_state != state.AVOIDING);
-      try {
-        Thread.sleep(30);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        try {
+          Thread.sleep(30);
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
       }
     }
   }
@@ -204,7 +206,7 @@ public class Navigation extends Thread {
     updateTargetInfo();
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
       // As long as the angle to the target position is bigger than the threshold, keep rotating.
-      driver.rotate(angle_to_target_pos);
+      driver.rotate(angle_to_target_pos, false, true);
       return state.ROTATING;
     } else {
       // If our angle is smaller than the threshold, then we can move, start moving!
@@ -227,7 +229,7 @@ public class Navigation extends Thread {
       min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance
                                      // gets smaller.
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
-        driver.moveTo(dist_to_target_pos);
+        driver.moveTo(dist_to_target_pos, true);
         return state.MOVING;
       } else {
         // if angle AND distance are both small enough, we reached the point
@@ -441,5 +443,9 @@ public class Navigation extends Thread {
   // In there only because the lab asks for it.
   public synchronized boolean isNavigating() {
     return navigating;
+  }
+  
+  public synchronized void setNavigating(boolean arg) {
+    this.navigating = arg;
   }
 }

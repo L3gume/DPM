@@ -15,7 +15,7 @@ public class Odometer extends Thread {
 
   private static final long ODOMETER_PERIOD = 25; /* odometer update period, in ms */
   private final double WHEEL_RAD = 2.1;
-  private final double WHEELBASE = 9.8; // Not very sure, we used 15.75 in lab 2 and it performs very well
+  private final double WHEELBASE = 9.8;
   private Object lock; /* lock object for mutual exclusion */
 
   // default constructor
@@ -59,7 +59,12 @@ public class Odometer extends Thread {
 
       double delta_dist = 0.5 * (d_l + d_r);
       // Compute the position variation
-
+      
+      double new_theta = computeAngle(this.theta + delta_theta);
+  
+      double delta_x = delta_dist * Math.cos(new_theta);
+      double delta_y = delta_dist * Math.sin(new_theta);
+      
       synchronized (lock) {
         /**
          * Don't use the variables x, y, or theta anywhere but here! Only update the values of x, y,
@@ -67,10 +72,7 @@ public class Odometer extends Thread {
          */
 
         // Update theta
-        setTheta(computeAngle(this.theta + delta_theta));
-
-        double delta_x = delta_dist * Math.cos(getTheta());
-        double delta_y = delta_dist * Math.sin(getTheta());
+        setTheta(new_theta);       
 
         // Update the position
         setX(getX() + delta_x);
