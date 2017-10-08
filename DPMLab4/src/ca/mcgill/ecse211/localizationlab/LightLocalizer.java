@@ -52,29 +52,7 @@ public class LightLocalizer {
 
 		assert (sample[0] > 0);
 
-		// reset the motors
-
-		for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] { driver.leftMotor, driver.rightMotor }) {
-
-			motor.stop();
-
-			motor.setAcceleration(3000);
-
-		}
-
-		// wait 5 seconds
-
-		try {
-
-			Thread.sleep(2000);
-
-		} catch (InterruptedException e) {
-
-			// there is nothing to be done here because it is not expected that
-
-			// the odometer will be interrupted by another thread
-
-		}
+	
 
 		while (light_level < 0.5) {
 
