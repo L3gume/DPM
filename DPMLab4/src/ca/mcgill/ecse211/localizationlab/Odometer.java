@@ -15,7 +15,7 @@ public class Odometer extends Thread {
 
   private static final long ODOMETER_PERIOD = 25; /* odometer update period, in ms */
   private final double WHEEL_RAD = 2.1;
-  private final double WHEELBASE = 9.8; // Not very sure, we used 15.75 in lab 2 and it performs very well.
+  private final double WHEELBASE = 9.8; // Not very sure, we used 15.75 in lab 2 and it performs very well
   private Object lock; /* lock object for mutual exclusion */
 
   // default constructor
