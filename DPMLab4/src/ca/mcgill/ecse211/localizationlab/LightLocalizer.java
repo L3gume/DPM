@@ -97,6 +97,33 @@ public class LightLocalizer {
 		driver.moveTo((gridDistance) / 2, true);
 
 		driver.stop();
+		
+		/*
+		 * 
+		 * Or we can make it more simple but the it may be not very precise
+		 * 
+		 * depending on whether we can put it precisely alone the 45 degree line.
+		 * 
+		 */
+
+	/*	driver.rotate(45, true, true);
+		
+		while (light_level < 0.5) {
+
+			driver.moveForward();
+
+		}
+
+		driver.stop();
+		
+		// Backward
+
+		driver.moveTo(-backwardDistance, true);
+		
+		// Point to 0 degree.
+		
+		driver.rotate(-45, true, true);
+	*/	
 
 	}
 
