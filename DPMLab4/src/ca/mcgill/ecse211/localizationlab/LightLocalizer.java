@@ -9,6 +9,7 @@ public class LightLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
+  private final double SENSOR_DISTANCE = 14.00;
   private final double GRID_LENGTH = 30.48;
   private final double SENSOR_OFFSET = 10.0;
   private final float LIGHT_THRESHOLD = 0.5f;
