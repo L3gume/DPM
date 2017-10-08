@@ -7,8 +7,7 @@ import lejos.robotics.SampleProvider;
 // so we can scan for obstacles in multiple directions.
 
 public class UltrasonicPoller extends Thread {
-  private Navigation nav;
-  private Object lock;
+//  private Navigation nav; Not used in this lab. 
   private UltrasonicLocalizer ul;
   private SampleProvider sample;
   private float[] usData;
@@ -18,7 +17,6 @@ public class UltrasonicPoller extends Thread {
     this.sample = sample;
     this.usData = usData;
     this.ul = ul;
-    lock = new Object();
   }
 
   public void run() {
@@ -28,7 +26,7 @@ public class UltrasonicPoller extends Thread {
         ul.setDist(usData[0] * 100.f);
         distance = usData[0];
       try {
-        Thread.sleep(40);
+        Thread.sleep(30);
       } catch (Exception e) {
       } // Poor man's timed sampling
     }
@@ -54,7 +52,8 @@ public class UltrasonicPoller extends Thread {
     return this.distance;
   }
 
-  public void setNav(Navigation n) {
-    nav = n;
-  }
+  // Not used in this lab.
+//  public void setNav(Navigation n) {
+//    nav = n;
+//  }
 }

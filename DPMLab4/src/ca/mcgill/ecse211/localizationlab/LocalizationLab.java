@@ -3,10 +3,9 @@ package ca.mcgill.ecse211.localizationlab;
 import ca.mcgill.ecse211.localizationlab.Driver;
 import ca.mcgill.ecse211.localizationlab.Navigation;
 import ca.mcgill.ecse211.localizationlab.Odometer;
-import ca.mcgill.ecse211.localizationlab.OdometryDisplay;
+import ca.mcgill.ecse211.localizationlab.Display;
 import ca.mcgill.ecse211.localizationlab.UltrasonicLocalizer.Mode;
 import ca.mcgill.ecse211.localizationlab.UltrasonicPoller;
-import lejos.ev3.tools.EV3ImageCodePanel;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -39,7 +38,7 @@ public class LocalizationLab {
   private static SampleProvider mean;
   private static float[] usData;
 
-  private static EV3ColorSensor colorSensor;
+  //private static EV3ColorSensor colorSensor;
   private static SampleProvider cs;
   private static SampleProvider median;
   private static float[] colorData;
@@ -62,11 +61,11 @@ public class LocalizationLab {
     usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
     
     // Set up the color sensor.
-    colorSensor = new EV3ColorSensor(colorPort);  
+    @SuppressWarnings("resource")
+    SensorModes colorSensor = new EV3ColorSensor(colorPort);  
     cs = colorSensor.getMode("Red");
-    median = new MedianFilter(cs, 5);
+    median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
-    colorSensor.setFloodlight(false);
     
     // Set up the menu display.
     do {
@@ -99,13 +98,34 @@ public class LocalizationLab {
       LightLocalizer ll = new LightLocalizer(d, odometer);
       ColorPoller cp = new ColorPoller(median, colorData, ll);
       Navigation nav = new Navigation(d, odometer, u);
-      OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, nav);
+      Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
       
+      (new Thread() {
+        public void run() {
+          while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+          System.exit(0);
+        }
+      }).start();
+      
+      cp.start();
       odometer.start();
       odometryDisplay.start();
-      //nav.start();
+      nav.start();
       u.start();
       ul.start();
+      
+      while (!ul.done);
+      ll.start();
+        
+      while (!ll.done);
+      nav.setNavigating(true);
+      nav.setPath(new Waypoint[] {new Waypoint(0,0)});
+      
+      while (nav.isNavigating());
+      d.rotate(-odometer.getTheta(), false, false);
     }
+    
+    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+    System.exit(0);
   }
 }

@@ -84,7 +84,7 @@ public class Navigation extends Thread {
     this.odo = odo;
     this.uPoll = uPoll;
 
-    uPoll.setNav(this);
+//    uPoll.setNav(this); Not needed for this lab.
 
     min_dist = Double.MAX_VALUE;
   }
@@ -178,6 +178,9 @@ public class Navigation extends Thread {
     target_pos = getNextWaypoint(); // Get the next waypoint in the array, the first one in this
                                     // case.
     if (target_pos != null) {
+      if (LocalizationLab.debug_mode) {
+        System.out.println("[Navigation] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
+      }
       return state.COMPUTING;
     }
     // Fallthrough, go back to IDLE if we don't have a target position
@@ -265,8 +268,15 @@ public class Navigation extends Thread {
     updateTargetInfo();
     if (dist_to_target_pos < DISTANCE_THRESHOLD) {
       min_dist = Double.MAX_VALUE; // reset
+      driver.rotate(0, true, true);
       target_pos = getNextWaypoint();
-      return state.COMPUTING;
+      
+      if (target_pos != null) {
+        return state.COMPUTING;
+      } else {
+        navigating = false;
+        return state.IDLE;
+      }   
     } else {
       return state.MOVING; // Will have to improve this.
     }
@@ -447,5 +457,9 @@ public class Navigation extends Thread {
   
   public synchronized void setNavigating(boolean arg) {
     this.navigating = arg;
+  }
+
+  public void setPath(Waypoint[] waypoints) {
+    path = waypoints;
   }
 }

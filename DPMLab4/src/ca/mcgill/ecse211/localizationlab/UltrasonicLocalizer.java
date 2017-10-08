@@ -1,4 +1,8 @@
 package ca.mcgill.ecse211.localizationlab;
+
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+
 /**
  * 
  * @author Justin Tremblay
@@ -16,7 +20,8 @@ public class UltrasonicLocalizer extends Thread {
   /*
    * Localization Constant(s)
    */
-  private final float DIST_THRESHOLD = 50.f;
+  private final float RISING_DIST_THRESHOLD = 30.f;
+  private final float FALLING_DIST_THRESHOLD = 70.f;
 
   /*
    * Localization Variables
@@ -27,6 +32,8 @@ public class UltrasonicLocalizer extends Thread {
   private double theta1 = -1; // -1 is invalid since we are wrapping around from 359 to 0 and
   private double theta2 = -1; // vice-versa.
 
+  public boolean done = false;
+  
   public UltrasonicLocalizer(Mode mode, Driver driver, Odometer odo) {
     this.mode = mode;
     this.driver = driver;
@@ -57,31 +64,33 @@ public class UltrasonicLocalizer extends Thread {
    */
   private void fallingEdge() {
     wait(mode);
-    driver.stop(); // We made it here, this means a falling edge has been detected.
     theta1 = computeAngle(odo.getTheta()); // Record the current theta.
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
 
     wait(mode);
-    driver.stop();
+    driver.rotate(0, true, false);
     theta2 = computeAngle(odo.getTheta());
 
+    Button.waitForAnyPress();
+    
     computeOrientation();
   }
 
   private void risingEdge() {
-    wait(mode);
-    driver.stop(); // We made it here, this means a falling edge has been detected.
+    wait(mode);  
     theta1 = computeAngle(odo.getTheta()); // Record the current theta.
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
 
     wait(mode);
-    driver.stop();
+    driver.rotate(0, true, false);
     theta2 = computeAngle(odo.getTheta());
 
+    Button.waitForAnyPress();
+    
     computeOrientation();
   }
   
@@ -102,8 +111,14 @@ public class UltrasonicLocalizer extends Thread {
         break;
     }
 
-    odo.setTheta(computeAngle(new_theta + odo.getTheta()));
-    driver.rotate(-odo.getTheta(), false, false);
+    odo.setTheta(computeAngle(Math.toRadians(new_theta) + odo.getTheta()));
+    
+    //System.out.print("Theta: " + odo.getTheta());
+    
+    
+    driver.rotate(-odo.getTheta(), false, true); 
+    Button.waitForAnyPress();
+    done = true;
   }
 
   /*
@@ -142,13 +157,16 @@ public class UltrasonicLocalizer extends Thread {
    * Not really necessary, this is just to make the risingEdge and fallingEdge methods more readable.
    */
   private void wait(Mode m) {
+    Sound.setVolume(70);
     if (m == Mode.FALLING_EDGE) {
-      while (getDist() > DIST_THRESHOLD) {
+      while (getDist() > FALLING_DIST_THRESHOLD) {
       } ; // Wait until we capture a falling edge.
+      Sound.beep();
       return;
     } else {
-      while (getDist() < DIST_THRESHOLD) {
+      while (getDist() < RISING_DIST_THRESHOLD) {
       } ; // Wait until we capture a rising edge.
+      Sound.beep();
       return;
     }
   }

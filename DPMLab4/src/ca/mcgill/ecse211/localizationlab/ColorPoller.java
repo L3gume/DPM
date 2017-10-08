@@ -12,9 +12,10 @@ public class ColorPoller extends Thread {
   private SampleProvider sample;
   private LightLocalizer ll;
   private float[] lightData;
-  
+
   /**
    * Constructor
+   * 
    * @param sample a SampleProvider from which we fetch the samples.
    * @param lightData a float array to store the samples.
    * @param ll a LightLocalizer to which we will pass the data through a synchronized setter.
@@ -24,13 +25,17 @@ public class ColorPoller extends Thread {
     this.lightData = lightData;
     this.ll = ll;
   }
-  
+
   public void run() {
-    sample.fetchSample(lightData, 0);
-    ll.setLightLevel(lightData[0]);
-    try {
-      Thread.sleep(40);
-    } catch (Exception e) {
-    } // Poor man's timed sampling
+    while (true) {
+      sample.fetchSample(lightData, 0);
+      if (lightData[0] > 0.f) {
+        ll.setLightLevel(lightData[0]);
+      }
+      try {
+        Thread.sleep(20);
+      } catch (Exception e) {
+      } // Poor man's timed sampling
+    }
   }
 }

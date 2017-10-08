@@ -24,7 +24,7 @@ public class Odometer extends Thread {
     this.rightMotor = rightMotor;
     this.x = 0.0;
     this.y = 0.0;
-    this.theta = Math.toRadians(90.0);
+    this.theta = Math.toRadians(0.0);
     this.leftMotorTachoCount = 0;
     this.rightMotorTachoCount = 0;
     lock = new Object();

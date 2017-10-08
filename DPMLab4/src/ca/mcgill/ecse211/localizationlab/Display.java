@@ -10,18 +10,22 @@ import lejos.hardware.lcd.TextLCD;
 /*
  * Code taken from previous labs.
  */
-public class OdometryDisplay extends Thread {
+public class Display extends Thread {
   private static final long DISPLAY_PERIOD = 250;
   private Odometer odometer;
   private TextLCD t;
 
   private Navigation nav;
+  private UltrasonicLocalizer ul;
+  private LightLocalizer ll;
 
   // constructor
-  public OdometryDisplay(Odometer odometer, TextLCD t, Navigation n) {
+  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, LightLocalizer ll) {
     this.odometer = odometer;
     this.t = t;
     this.nav = n;
+    this.ul = ul;
+    this.ll = ll;
   }
 
   // run method (required for Thread)
@@ -48,6 +52,9 @@ public class OdometryDisplay extends Thread {
         t.drawString(formattedDoubleToString(position[i], 2), 3, i);
       }
 
+      t.drawString("distance: " + ul.getDist(), 0, 4);
+      t.drawString("Light Level: " + ll.getLightLevel(), 0, 5);
+      t.drawString("", 0, 6);
       t.drawString("" + nav.getCurrentState(), 0, 6); // Display the current state of the Navigator
 
       // throttle the OdometryDisplay
