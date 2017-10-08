@@ -25,10 +25,10 @@ public class LightLocalizer {
 	private SampleProvider median;
 
 	private EV3ColorSensor sensor;
+	
+	public static final double TRACK = 15.75;
 
-	public void drive(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, double leftRadius,
-
-			double rightRadius, double width) {
+	public void drive(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
 
 		Port port = LocalEV3.get().getPort("S1");
 
@@ -98,9 +98,9 @@ public class LightLocalizer {
 
 		rightMotor.setSpeed(ROTATE_SPEED);
 
-		leftMotor.rotate(convertAngle(leftRadius, width, 90.0), true);
+		leftMotor.rotate(convertAngle(radius, TRACK, 90.0), true);
 
-		rightMotor.rotate(-convertAngle(rightRadius, width, 90.0), false);
+		rightMotor.rotate(-convertAngle(radius, TRACK, 90.0), false);
 
 		/*
 		 * 
