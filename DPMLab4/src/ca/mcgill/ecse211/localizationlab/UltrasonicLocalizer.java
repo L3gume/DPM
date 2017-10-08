@@ -34,7 +34,7 @@ public class UltrasonicLocalizer extends Thread {
   }
 
   /**
-   * Run method.
+   * Run method. It is not in a loop, it only runs once.
    */
   public void run() {
     driver.rotate(360, true, true);

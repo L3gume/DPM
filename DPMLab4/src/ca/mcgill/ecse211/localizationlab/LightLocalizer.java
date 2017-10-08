@@ -1,130 +1,81 @@
 package ca.mcgill.ecse211.localizationlab;
 
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
-import lejos.robotics.filter.MedianFilter;
+/**
+ * 
+ * @author Justin Tremblay
+ *
+ */
+public class LightLocalizer extends Thread {
+  private Driver driver;
+  private Odometer odo;
 
-public class LightLocalizer {
+  private final double GRID_LENGTH = 30.48;
+  private final double SENSOR_OFFSET = 10.0;
+  private final float LIGHT_THRESHOLD = 0.5f;
 
-	private double gridDistance = 30.48;
+  private int line_count = 0; // We will detect 4 lines in this lab
+  private double[] angles = new double[4];
 
-	private Driver driver;
+  private float light_level;
+  private float prev_light_level;
 
-	private double backwardDistance = 14.0;
+  public LightLocalizer(Driver driver, Odometer odo) {
+    this.driver = driver;
+    this.odo = odo;
+  }
 
-	private float[] sample;
+  public void run() {
+    driver.rotate(360, true, true);
+    localize();
+  }
 
-	private SampleProvider ambientLight;
+  private void localize() {
+    // Start by finding all the lines
+    while (line_count != 4) {
+      waitForLine();
+      // The method returned, that means we found a line
+      angles[line_count++] = odo.getTheta(); // Record the angle at which we detected the line.
+      sleepThread(1); // wait for a second to avoid multiple detections of the same line.
+    }
+    
+    // We found all the lines, compute the position.
+    computePosition();
+  }
 
-	private SampleProvider median;
+  private void computePosition() {
+    
+  }
 
-	private EV3ColorSensor sensor;
+  /**
+   * This method locks the localizer until the light level becomes lower that the threshold level,
+   * meaning we detected a line.
+   */
+  private void waitForLine() {
+    while (getLightLevel() > LIGHT_THRESHOLD) {
+    } ;
+    return;
+  }
 
-	public LightLocalizer(Driver driver) {
+  /*
+   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more readable.
+   */
+  private void sleepThread(float seconds) {
+    try {
+      Thread.sleep((long) (seconds * 1000));
+    } catch (Exception e) {
+      // TODO: handle exception
+    }
+  }
+  
+  /*
+   * Getters and Setters for the light_level, used by colorPoller
+   */
+  public synchronized float getLightLevel() {
+    return light_level;
+  }
 
-		this.driver = driver;
-
-	}
-
-	public void drive() {
-
-		Port port = LocalEV3.get().getPort("S1");
-
-		sensor = new EV3ColorSensor(port);
-
-		SensorModes colorSensor = sensor;
-
-		ambientLight = colorSensor.getMode("Red");
-
-		median = new MedianFilter(ambientLight, 5);
-
-		sample = new float[median.sampleSize()];
-
-		sensor.setFloodlight(false);
-
-		median.fetchSample(sample, 0);
-
-		float light_level = sample[0];
-
-		assert (sample[0] > 0);
-
-	
-
-		while (light_level < 0.5) {
-
-			driver.moveForward();
-
-		}
-
-		driver.stop();
-
-		// Backward
-
-		driver.moveTo(-backwardDistance - (gridDistance) / 2, true);
-
-		// turn 90 degrees clockwise
-
-		driver.rotate(90, true, true);
-
-		driver.stop();
-
-		/*
-		 * 
-		 * Now We need to let the robot move to (0, 0).
-		 * 
-		 */
-
-		while (light_level < 0.5) {
-
-			driver.moveForward();
-
-		}
-
-		driver.stop();
-
-		// turn 90 degrees counterclockwise
-
-		driver.rotate(-90, true, true);
-
-		driver.stop();
-
-		// Now move to the (0, 0).
-
-		driver.moveTo((gridDistance) / 2, true);
-
-		driver.stop();
-		
-		/*
-		 * 
-		 * Or we can make it more simple but the it may be not very precise
-		 * 
-		 * depending on whether we can put it precisely alone the 45 degree line.
-		 * 
-		 */
-
-	/*	driver.rotate(45, true, true);
-		
-		while (light_level < 0.5) {
-
-			driver.moveForward();
-
-		}
-
-		driver.stop();
-		
-		// Backward
-
-		driver.moveTo(-backwardDistance, true);
-		
-		// Point to 0 degree.
-		
-		driver.rotate(-45, true, true);
-	*/	
-
-	}
-
+  public synchronized void setLightLevel(float new_level) {
+    prev_light_level = light_level;
+    light_level = new_level;
+  }
 }

@@ -6,16 +6,19 @@ import ca.mcgill.ecse211.localizationlab.Odometer;
 import ca.mcgill.ecse211.localizationlab.OdometryDisplay;
 import ca.mcgill.ecse211.localizationlab.UltrasonicLocalizer.Mode;
 import ca.mcgill.ecse211.localizationlab.UltrasonicPoller;
+import lejos.ev3.tools.EV3ImageCodePanel;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
+import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.MeanFilter;
+import lejos.robotics.filter.MedianFilter;
 
 public class LocalizationLab {
 
@@ -29,10 +32,17 @@ public class LocalizationLab {
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
   // Ultrasonic sensor port.
   private static final Port usPort = LocalEV3.get().getPort("S2");
+  // Color sensor port.
+  private static final Port colorPort = LocalEV3.get().getPort("S1");
 
   private static SampleProvider us;
   private static SampleProvider mean;
   private static float[] usData;
+
+  private static EV3ColorSensor colorSensor;
+  private static SampleProvider cs;
+  private static SampleProvider median;
+  private static float[] colorData;
 
   public static final double WHEEL_RADIUS = 2.1;
   public static final double TRACK = 9.8;
@@ -51,6 +61,14 @@ public class LocalizationLab {
     mean = new MeanFilter(us, us.sampleSize());
     usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
     
+    // Set up the color sensor.
+    colorSensor = new EV3ColorSensor(colorPort);  
+    cs = colorSensor.getMode("Red");
+    median = new MedianFilter(cs, 5);
+    colorData = new float[median.sampleSize()];
+    colorSensor.setFloodlight(false);
+    
+    // Set up the menu display.
     do {
       // clear the display
       t.clear();
@@ -78,12 +96,14 @@ public class LocalizationLab {
       Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
       UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
       UltrasonicPoller u = new UltrasonicPoller(mean, usData, ul);
+      LightLocalizer ll = new LightLocalizer(d, odometer);
+      ColorPoller cp = new ColorPoller(median, colorData, ll);
       Navigation nav = new Navigation(d, odometer, u);
       OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, nav);
       
       odometer.start();
       odometryDisplay.start();
-      nav.start();
+      //nav.start();
       u.start();
       ul.start();
     }
