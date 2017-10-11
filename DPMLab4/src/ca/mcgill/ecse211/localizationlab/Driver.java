@@ -41,8 +41,8 @@ public class Driver {
   }
 
   public void rotate(double angle, boolean use_degrees, boolean ret) {
-    leftMotor.setAcceleration(1000);
-    rightMotor.setAcceleration(1000);
+    leftMotor.setAcceleration(500);
+    rightMotor.setAcceleration(500);
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);
     if (!use_degrees) {

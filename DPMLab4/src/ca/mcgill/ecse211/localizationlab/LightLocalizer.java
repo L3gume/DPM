@@ -12,7 +12,7 @@ public class LightLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
-  private final double SENSOR_OFFSET = 10.8f; // The actual length won't give good results.
+  private final double SENSOR_OFFSET = 16.9;//10.8; // The actual length won't give good results.
   private final float LIGHT_THRESHOLD = 0.37f;
 
   private int line_count = 0; // We will detect 4 lines in this lab
@@ -34,6 +34,7 @@ public class LightLocalizer extends Thread {
 
   private void localize() {
     // Start by finding all the lines
+    sleepThread(1); // sleep the thread for a second to avoid false positives right off the bat.
     while (line_count != 4) {
       waitForLine();
       // The method returned, that means we found a line
@@ -61,8 +62,8 @@ public class LightLocalizer extends Thread {
      * We also assume that both coordinates of the robot will always be negative.
      */
     
-    double x_pos = -SENSOR_OFFSET * Math.cos(Math.toDegrees(angles[2] - angles[0]) / 2);
-    double y_pos = -SENSOR_OFFSET * Math.cos(Math.toDegrees(angles[3] - angles[1]) / 2);
+    double x_pos = -SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
+    double y_pos = -SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
     
     // Both negative.
     if (x_pos > 0) {
@@ -76,7 +77,6 @@ public class LightLocalizer extends Thread {
     odo.setX(x_pos);
     odo.setY(y_pos);
     
-    Button.waitForAnyPress();
     done = true;
   }
 
@@ -85,7 +85,7 @@ public class LightLocalizer extends Thread {
    * meaning we detected a line.
    */
   private void waitForLine() {
-    while (getLightLevel() > LIGHT_THRESHOLD && getLightLevel() > 0.f) {
+    while (getLightLevel() > LIGHT_THRESHOLD && getLightLevel() > 0.1f) {
     } ;
     Sound.setVolume(70);
     Sound.beep();

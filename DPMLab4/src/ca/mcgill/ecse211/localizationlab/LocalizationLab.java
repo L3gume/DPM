@@ -113,11 +113,12 @@ public class LocalizationLab {
       ul.start();
       
       while (!ul.done);
+      d.rotate(45, true, false);
+      d.moveTo(5.0, false);
       cp.start();
       while (!cp.isAlive()); // Make sure the color poller thread is alive before starting the localization.
       ll.start();
-        
-      while (!ll.done);
+      while (!ll.done);      
       nav.start();
       nav.setNavigating(true);
       nav.setPath(new Waypoint[] {new Waypoint(0,0)});

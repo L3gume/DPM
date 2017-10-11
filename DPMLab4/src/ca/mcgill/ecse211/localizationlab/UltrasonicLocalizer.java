@@ -6,7 +6,6 @@ import lejos.hardware.Sound;
 /**
  * 
  * @author Justin Tremblay
- * @author Xu Hai
  */
 public class UltrasonicLocalizer extends Thread {
   private Driver driver;
@@ -64,32 +63,46 @@ public class UltrasonicLocalizer extends Thread {
    */
   private void fallingEdge() {
     wait(mode);
-    theta1 = computeAngle(odo.getTheta()); // Record the current theta.
+    theta1 = odo.getTheta(); // Record the current theta.
+    
+    if (LocalizationLab.debug_mode) {
+      System.out.println("theta1: " + theta1);
+    }
+    
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
 
     wait(mode);
     driver.rotate(0, true, false);
-    theta2 = computeAngle(odo.getTheta());
-
-    Button.waitForAnyPress();
+    theta2 = odo.getTheta();
+    
+    if (LocalizationLab.debug_mode) {
+      System.out.println("theta2: " + theta2);
+    }
     
     computeOrientation();
   }
 
   private void risingEdge() {
     wait(mode);  
-    theta1 = computeAngle(odo.getTheta()); // Record the current theta.
+    theta1 = odo.getTheta(); // Record the current theta.
+    
+    if (LocalizationLab.debug_mode) {
+      System.out.println("theta1: " + theta1);
+    }
+    
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
 
     wait(mode);
     driver.rotate(0, true, false);
-    theta2 = computeAngle(odo.getTheta());
-
-    Button.waitForAnyPress();
+    theta2 = odo.getTheta();
+    
+    if (LocalizationLab.debug_mode) {
+      System.out.println("theta2: " + theta2);
+    }
     
     computeOrientation();
   }
@@ -101,22 +114,26 @@ public class UltrasonicLocalizer extends Thread {
     double new_theta = -1;
     switch (mode) {
       case FALLING_EDGE:
-        new_theta = 45.0 - ((theta1 + theta2) / 2);
+        new_theta = Math.toRadians(225.0) - ((theta1 + theta2) / 2);
         break;
       case RISING_EDGE:
-        new_theta = 225.0 - ((theta1 + theta2) / 2);
+        new_theta = Math.toRadians(45.0) - ((theta1 + theta2) / 2);
         break;
       case INVALID:
         System.out.print("Invalid Ultrasonic Localizer mode, send help!");
         break;
     }
 
-    odo.setTheta(computeAngle(Math.toRadians(new_theta) + odo.getTheta()));
+    if (LocalizationLab.debug_mode) {
+      System.out.println("current heading: " + Math.toDegrees(odo.getTheta()) + " error: " + Math.toDegrees(new_theta));
+    }
+    
+    odo.setTheta(computeAngle(new_theta + odo.getTheta()));
     
     //System.out.print("Theta: " + odo.getTheta());
-    
-    
-    driver.rotate(-odo.getTheta(), false, true); 
+    // This can mean a long turn but hey, it's not required to do the smallest turn!
+    Button.waitForAnyPress();
+    driver.rotate(-odo.getTheta(), false, false);
     Button.waitForAnyPress();
     done = true;
   }
