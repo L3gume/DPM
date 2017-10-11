@@ -21,12 +21,13 @@ import lejos.robotics.filter.MedianFilter;
 
 public class LocalizationLab {
 
-  public static final boolean debug_mode = false;
+  public static final boolean debug_mode = true;
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   // Medium motor to which the US sensor is mounted, not used in this lab.
+  @SuppressWarnings("unused")
   private static final EV3MediumRegulatedMotor sensorMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
   // Ultrasonic sensor port.
@@ -99,6 +100,9 @@ public class LocalizationLab {
       Navigation nav = new Navigation(d, odometer, u);
       Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
       
+      /*
+       * Thread to detect early exits.
+       */
       (new Thread() {
         public void run() {
           while (Button.waitForAnyPress() != Button.ID_ESCAPE);
@@ -106,6 +110,8 @@ public class LocalizationLab {
         }
       }).start();
       
+      
+      // "scripted" part for the action sequence. A state machine and goal queue would be better.
       odometer.start();
       odometryDisplay.start();
       u.start();

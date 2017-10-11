@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.localizationlab;
 
-import lejos.hardware.Button;
 import lejos.hardware.Sound;
 
 /**
@@ -32,6 +31,9 @@ public class LightLocalizer extends Thread {
     localize();
   }
 
+  /**
+   * Where the magic happens. Get the heading (angle from 0 to 359.999) at the 4 lines before computing the robot's position.
+   */
   private void localize() {
     // Start by finding all the lines
     sleepThread(1); // sleep the thread for a second to avoid false positives right off the bat.
@@ -53,6 +55,9 @@ public class LightLocalizer extends Thread {
     computePosition();
   }
 
+  /**
+   * Computes the position of the robot using the angles found in the localize() method.
+   */
   private void computePosition() {
     /*
      * Here we know that we are always rotating in the same direction (counter-clockwise) so we know
@@ -77,6 +82,7 @@ public class LightLocalizer extends Thread {
     odo.setX(x_pos);
     odo.setY(y_pos);
     
+    // Notify the main method that we are done.
     done = true;
   }
 
@@ -92,7 +98,7 @@ public class LightLocalizer extends Thread {
     return;
   }
 
-  /*
+  /**
    * Not really necessary, this is just to make the risingEdge and fallingEdge methods more
    * readable.
    */

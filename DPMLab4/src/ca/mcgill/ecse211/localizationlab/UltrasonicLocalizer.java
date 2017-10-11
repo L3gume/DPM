@@ -11,6 +11,7 @@ public class UltrasonicLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
+  // Enum for the localization mode chosen by the user.
   public enum Mode {
     FALLING_EDGE, RISING_EDGE, INVALID
   };
@@ -31,8 +32,15 @@ public class UltrasonicLocalizer extends Thread {
   private double theta1 = -1; // -1 is invalid since we are wrapping around from 359 to 0 and
   private double theta2 = -1; // vice-versa.
 
+  // checked in main to ensure we don't skip steps.
   public boolean done = false;
   
+  /**
+   * 
+   * @param mode enum value for selected localization mode.
+   * @param driver driver object that handles moving the robot.
+   * @param odo odometer.
+   */
   public UltrasonicLocalizer(Mode mode, Driver driver, Odometer odo) {
     this.mode = mode;
     this.driver = driver;
@@ -143,6 +151,11 @@ public class UltrasonicLocalizer extends Thread {
    * Utility methods, getters and setters.
    */
   
+  /**
+   * 
+   * @param t_rad angle in radians
+   * @return angle in radians, from 0 to 359.9999
+   */
   private double computeAngle(double t_rad) {
     double t_deg = Math.toDegrees(t_rad);
     if (t_deg > 359.99999999 && t_deg >= 0) {
@@ -163,10 +176,18 @@ public class UltrasonicLocalizer extends Thread {
     this.dist = dist;
   }
 
+  /**
+   * returns the last distance read by the ultrasonic sensor.
+   * @return distance (cm)
+   */
   public synchronized float getDist() {
     return dist;
   }
 
+  /**
+   * returns the previous distance
+   * @return previous distance. (cm)
+   */
   public synchronized float getPrevDist() {
     return prev_dist;
   }
