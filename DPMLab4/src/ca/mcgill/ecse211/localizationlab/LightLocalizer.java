@@ -12,7 +12,7 @@ public class LightLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
-  private final double SENSOR_OFFSET = 16.9;//10.8; // The actual length won't give good results.
+  private final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
   private final float LIGHT_THRESHOLD = 0.37f;
 
   private int line_count = 0; // We will detect 4 lines in this lab
@@ -81,7 +81,7 @@ public class LightLocalizer extends Thread {
   }
 
   /**
-   * This method locks the localizer until the light level becomes lower that the threshold level,
+   * This method stops the localizer until the light level becomes lower that the threshold level,
    * meaning we detected a line.
    */
   private void waitForLine() {

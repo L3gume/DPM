@@ -44,7 +44,7 @@ public class LocalizationLab {
   private static float[] colorData;
 
   public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 9.8;
+  public static final double TRACK = 9.545;
 
   private static Mode choice;
 
@@ -81,7 +81,6 @@ public class LocalizationLab {
       case Button.ID_LEFT:
         choice = Mode.RISING_EDGE;
         break;
-
       case Button.ID_RIGHT:
         choice = Mode.FALLING_EDGE;
         break;

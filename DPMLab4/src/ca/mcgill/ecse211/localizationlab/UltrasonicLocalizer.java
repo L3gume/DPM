@@ -92,6 +92,7 @@ public class UltrasonicLocalizer extends Thread {
       System.out.println("theta1: " + theta1);
     }
     
+    // Rotate in the other direction.
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
