@@ -50,6 +50,7 @@ public class ZipLineLab {
   private static Mode choice;
 
   public static void main(String[] args) {
+    int[] coordinates;
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
@@ -66,6 +67,9 @@ public class ZipLineLab {
     cs = colorSensor.getMode("Red");
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
+
+    // Display the main menu and receive zip line coordinates from the user.
+    coordinates = ZipLineLab.getZipLineCoordinates(t);
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
@@ -108,4 +112,96 @@ public class ZipLineLab {
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }
+
+  /**
+   * Display the main menu, querying the user for the X/Y-coordinates of the zip line.
+   * @param t the EV3 LCD display to which the main menu should be output
+   * @return the X/Y-coordinates of the zip line
+   */
+  static int[] getZipLineCoordinates(final TextLCD t) {
+    boolean done = false;
+
+    // Clear the display.
+    t.clear();
+
+    t.drawString("Coordinates      ", 0, 0);
+    t.drawString("-----------------", 0, 1);
+    t.drawString("                 ", 0, 2);
+
+    int[] coords = new int[] { 0, 0 };
+
+    int index = 0;
+
+    while (!done) {
+      int buttonChoice = -1;
+
+      // Clear the current x/y-coordinate values.
+      t.drawString("X:               ", 0, 3);
+      t.drawString("Y:               ", 0, 4);
+
+      // Print the current x/y-coordinate values.
+      t.drawString(String.format("%2d", coords[0]), 3, 3);
+      t.drawString(String.format("%2d", coords[0]), 3, 4);
+
+      // Draw the indicator showing which coordinate value is currently selected.
+      t.drawString("<--", 12, 3 + index);
+
+      buttonChoice = Button.waitForAnyPress();
+
+      switch (buttonChoice) {
+        // Select the x-coordinate for modification.
+        case Button.ID_UP:
+          if (index == 0) {
+            break;
+          }
+
+          index = 1;
+
+          break;
+
+        // Select the y-coordinate for modification.
+        case Button.ID_DOWN:
+          if (index == 1) {
+            break;
+          }
+
+          index = 0;
+
+          break;
+
+        // Decrease the currently selected coordinate value.
+        case Button.ID_LEFT:
+          if (coords[0] <=  0) {
+            break;
+          }
+
+          coords[index] -= 1;
+
+          break;
+
+        // Increase the currently selected coordinate value.
+        case Button.ID_RIGHT:
+          if (coords[0] >= 12) {
+            break;
+          }
+
+          coords[index] += 1;
+
+          break;
+
+        // Submit selected coordinates.
+        case Button.ID_ENTER:
+          done = true;
+
+          break;
+
+        // Ignore.
+        default:
+          break;
+      }
+    }
+
+    return coords;
+  }
+
 }
