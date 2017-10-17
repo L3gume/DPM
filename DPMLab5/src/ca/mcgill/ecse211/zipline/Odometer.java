@@ -14,14 +14,16 @@ public class Odometer extends Thread {
   private EV3LargeRegulatedMotor rightMotor;
 
   private static final long ODOMETER_PERIOD = 25; /* odometer update period, in ms */
-  private final double WHEEL_RAD = 2.1;
-  private final double WHEELBASE = 9.545;
+  private final double WHEEL_RAD;
+  private final double WHEELBASE;
   private Object lock; /* lock object for mutual exclusion */
 
   // default constructor
-  public Odometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
+  public Odometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, double wheel_rad, double wheel_base) {
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
+    this.WHEEL_RAD = wheel_rad;
+    this.WHEELBASE = wheel_base;
     this.x = 0.0;
     this.y = 0.0;
     this.theta = Math.toRadians(0.0);

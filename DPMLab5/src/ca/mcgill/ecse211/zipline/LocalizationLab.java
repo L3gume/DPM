@@ -91,7 +91,7 @@ public class LocalizationLab {
     }
     
     if (buttonChoice == Button.ID_LEFT || buttonChoice == Button.ID_RIGHT) {
-      Odometer odometer = new Odometer(leftMotor, rightMotor);
+      Odometer odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
       Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
       UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
       UltrasonicPoller u = new UltrasonicPoller(mean, usData, ul);
