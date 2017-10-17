@@ -76,6 +76,10 @@ public class ZipLineLab {
     // Display the main menu and receive zip line coordinates from the user.
     coordsZipLine = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line", 0, 8));
 
+    // TODO: Choose only _one_ mode (i.e. select the one that works the best).
+//    choice = Mode.RISING_EDGE;
+    choice = Mode.FALLING_EDGE;
+
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
     UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
@@ -84,6 +88,24 @@ public class ZipLineLab {
     ColorPoller cp = new ColorPoller(median, colorData, ll);
     Navigation nav = new Navigation(d, odometer, u);
     Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
+
+    //
+    // TODO: Create Controller and ZiplineController instances.
+    //
+    //
+    //
+    // Constructors (now):
+    //
+    // Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip)
+    //
+    //
+    // Constructors (after):
+    //
+    // Controller(
+    //   Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip,
+    //   Waypoint coordsStart, Waypoint coordsZipLine
+    //   )
+    //
 
     /*
      * Thread to detect early exits.
@@ -113,6 +135,9 @@ public class ZipLineLab {
     nav.setPath(new Waypoint[] {new Waypoint(0,0)});
     while (nav.isNavigating());
     d.rotate(-odometer.getTheta(), false, false);
+
+    // TODO: Navigate to the zip line.
+    // TODO: Use the zip line.
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
