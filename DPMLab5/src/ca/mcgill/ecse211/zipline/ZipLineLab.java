@@ -19,7 +19,7 @@ import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.MeanFilter;
 import lejos.robotics.filter.MedianFilter;
 
-public class LocalizationLab {
+public class ZipLineLab {
 
   public static final boolean debug_mode = true;
   private static final EV3LargeRegulatedMotor leftMotor =
