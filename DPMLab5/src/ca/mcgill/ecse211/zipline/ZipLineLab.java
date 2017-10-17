@@ -50,7 +50,6 @@ public class ZipLineLab {
   private static Mode choice;
 
   public static void main(String[] args) {
-    int buttonChoice = -1;
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
@@ -67,28 +66,6 @@ public class ZipLineLab {
     cs = colorSensor.getMode("Red");
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
-    
-    // Set up the menu display.
-    do {
-      // clear the display
-      t.clear();
-      // ask the user whether the motors should drive in a square or float
-      t.drawString("Left: Rising Edge", 0, 0);
-      t.drawString("Right: Falling Edge", 0, 1);
-      buttonChoice = Button.waitForAnyPress();
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-
-    switch (buttonChoice) {
-      case Button.ID_LEFT:
-        choice = Mode.RISING_EDGE;
-        break;
-      case Button.ID_RIGHT:
-        choice = Mode.FALLING_EDGE;
-        break;
-      default:
-        System.exit(0);
-        break;
-    }
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
