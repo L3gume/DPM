@@ -89,48 +89,44 @@ public class ZipLineLab {
         System.exit(0);
         break;
     }
+
+    Odometer odometer = new Odometer(leftMotor, rightMotor);
+    Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
+    UltrasonicPoller u = new UltrasonicPoller(mean, usData, ul);
+    LightLocalizer ll = new LightLocalizer(d, odometer);
+    ColorPoller cp = new ColorPoller(median, colorData, ll);
+    Navigation nav = new Navigation(d, odometer, u);
+    Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
+
+    /*
+     * Thread to detect early exits.
+     */
+    (new Thread() {
+      public void run() {
+        while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+        System.exit(0);
+      }
+    }).start();
     
-    if (buttonChoice == Button.ID_LEFT || buttonChoice == Button.ID_RIGHT) {
-      Odometer odometer = new Odometer(leftMotor, rightMotor);
-      Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-      UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
-      UltrasonicPoller u = new UltrasonicPoller(mean, usData, ul);
-      LightLocalizer ll = new LightLocalizer(d, odometer);
-      ColorPoller cp = new ColorPoller(median, colorData, ll);
-      Navigation nav = new Navigation(d, odometer, u);
-      Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
-      
-      /*
-       * Thread to detect early exits.
-       */
-      (new Thread() {
-        public void run() {
-          while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-          System.exit(0);
-        }
-      }).start();
-      
-      
-      // "scripted" part for the action sequence. A state machine and goal queue would be better.
-      odometer.start();
-      odometryDisplay.start();
-      u.start();
-      ul.start();
-      
-      while (!ul.done);
-      d.rotate(45, true, false);
-      d.moveTo(5.0, false);
-      cp.start();
-      while (!cp.isAlive()); // Make sure the color poller thread is alive before starting the localization.
-      ll.start();
-      while (!ll.done);      
-      nav.start();
-      nav.setNavigating(true);
-      nav.setPath(new Waypoint[] {new Waypoint(0,0)});
-      
-      while (nav.isNavigating());
-      d.rotate(-odometer.getTheta(), false, false);
-    }
+    // "scripted" part for the action sequence. A state machine and goal queue would be better.
+    odometer.start();
+    odometryDisplay.start();
+    u.start();
+    ul.start();
+
+    while (!ul.done);
+    d.rotate(45, true, false);
+    d.moveTo(5.0, false);
+    cp.start();
+    while (!cp.isAlive()); // Make sure the color poller thread is alive before starting the localization.
+    ll.start();
+    while (!ll.done);
+    nav.start();
+    nav.setNavigating(true);
+    nav.setPath(new Waypoint[] {new Waypoint(0,0)});
+    while (nav.isNavigating());
+    d.rotate(-odometer.getTheta(), false, false);
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
