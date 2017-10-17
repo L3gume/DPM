@@ -152,7 +152,7 @@ public class Navigation extends Thread {
           // back to false;
           setObstacleDetected(false);
         }
-        if (LocalizationLab.debug_mode) {
+        if (ZipLineLab.debug_mode) {
 
           System.out.println("Status: " + cur_state);
         }
@@ -178,7 +178,7 @@ public class Navigation extends Thread {
     target_pos = getNextWaypoint(); // Get the next waypoint in the array, the first one in this
                                     // case.
     if (target_pos != null) {
-      if (LocalizationLab.debug_mode) {
+      if (ZipLineLab.debug_mode) {
         System.out.println("[Navigation] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
       }
       return state.COMPUTING;
@@ -191,7 +191,7 @@ public class Navigation extends Thread {
     // Compute the distance and angle to the target position, if rotation is needed, set state to
     // rotating, if not: move.
     updateTargetInfo();
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("Target position: " + target_pos.x + " " + target_pos.y);
     }
 
@@ -247,7 +247,7 @@ public class Navigation extends Thread {
   private state process_avoiding() {
     updateTargetInfo();
     float dist = uPoll.getDistance(); // Get the distance to the obstacle so we can make a decision
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("[AVOIDING] Obstacle distance: " + dist);
     }
     // No mather what, call the avoidObstacle method, which uses the PController.
@@ -328,7 +328,7 @@ public class Navigation extends Thread {
     dist_to_target_pos = magnitude(vect_to_target);
     angle_to_target_pos = angleToPos(vect_to_target);
 
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("Current Position: " + x + ", " + y);
       System.out.println("Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
       System.out.println("Distance to target: " + dist_to_target_pos);
@@ -347,7 +347,7 @@ public class Navigation extends Thread {
     orientation_vect[0] = Math.cos(orientation_angle);
     orientation_vect[1] = Math.sin(orientation_angle);
 
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("Orientation angle: " + Math.toDegrees(orientation_angle));
       System.out.println(
           "Orientation vector: [" + orientation_vect[0] + ", " + orientation_vect[1] + "]");
@@ -367,7 +367,7 @@ public class Navigation extends Thread {
     if (path != null) {
       if (waypoint_progress + 1 >= path.length) {
         // That's a problem
-        if (LocalizationLab.debug_mode) {
+        if (ZipLineLab.debug_mode) {
           System.out.println("Error: getting out of bounds of the path array");
         }
         // wait for new path.
@@ -423,7 +423,7 @@ public class Navigation extends Thread {
 
     // Overwrite the choice if this is true. This is for gathering data for the report.
     /*
-     * if (LocalizationLab.report_path) { this.path = reportPath; }
+     * if (ZipLineLab.report_path) { this.path = reportPath; }
      */
   }
 

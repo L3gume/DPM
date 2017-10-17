@@ -73,7 +73,7 @@ public class UltrasonicLocalizer extends Thread {
     wait(mode);
     theta1 = odo.getTheta(); // Record the current theta.
     
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("theta1: " + theta1);
     }
     
@@ -85,7 +85,7 @@ public class UltrasonicLocalizer extends Thread {
     driver.rotate(0, true, false);
     theta2 = odo.getTheta();
     
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("theta2: " + theta2);
     }
     
@@ -96,7 +96,7 @@ public class UltrasonicLocalizer extends Thread {
     wait(mode);  
     theta1 = odo.getTheta(); // Record the current theta.
     
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("theta1: " + theta1);
     }
     
@@ -109,7 +109,7 @@ public class UltrasonicLocalizer extends Thread {
     driver.rotate(0, true, false);
     theta2 = odo.getTheta();
     
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("theta2: " + theta2);
     }
     
@@ -133,7 +133,7 @@ public class UltrasonicLocalizer extends Thread {
         break;
     }
 
-    if (LocalizationLab.debug_mode) {
+    if (ZipLineLab.debug_mode) {
       System.out.println("current heading: " + Math.toDegrees(odo.getTheta()) + " error: " + Math.toDegrees(new_theta));
     }
     

@@ -41,7 +41,7 @@ public class LightLocalizer extends Thread {
       waitForLine();
       // The method returned, that means we found a line
       double theta = odo.getTheta();
-      if (LocalizationLab.debug_mode) {
+      if (ZipLineLab.debug_mode) {
         System.out.println("Angle " + line_count + ": " + Math.toDegrees(theta));
       }
       
