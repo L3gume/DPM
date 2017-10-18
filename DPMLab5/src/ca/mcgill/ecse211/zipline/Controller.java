@@ -112,19 +112,20 @@ public class Controller extends Thread {
   }
   
   /**
-   * No clue if this is going to work lmao.
+   * Returns the substate in the form of a string (since they're all different types
+   * 
    * @return substate
    */
-  public synchronized Object getCurSubState() {  
+  public synchronized String getCurSubState() {  
     switch (cur_state) {
       case IDLE: return null;
-      case LOCALIZING: return loc.getCurrentState();
-      case NAVIGATING: return nav.getCurrentState();
+      case LOCALIZING: return loc.getCurrentState().toString();
+      case NAVIGATING: return nav.getCurrentState().toString();
       case SEARCHING: return null;
       case ZIPLINE: return null;
     }
     
     // fallthrough
-    return state.IDLE;
+    return state.IDLE.toString();
   }
 }
