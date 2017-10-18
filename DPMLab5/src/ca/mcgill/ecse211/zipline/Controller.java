@@ -6,6 +6,7 @@ public class Controller extends Thread {
   private Driver drv;
   private Navigation nav;
   private Localizer loc;
+  private ZiplineController zip;
 
   // the SEARCHING state won't be implemented in this lab.
   public enum state {
@@ -13,6 +14,7 @@ public class Controller extends Thread {
   };
 
   private state cur_state = state.IDLE;
+  private boolean traversed_zipline = false;
 
   /**
    * Constructor
@@ -21,12 +23,14 @@ public class Controller extends Thread {
    * @param drv Driver
    * @param nav Navigator
    * @param loc Localizer
+   * @param zip ZiplineController
    */
-  public Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc) {
+  public Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip) {
     this.odo = odo;
     this.drv = drv;
     this.nav = nav;
     this.loc = loc;
+    this.zip = zip;
 
     init();
   }
@@ -81,10 +85,15 @@ public class Controller extends Thread {
   }
 
   public state process_localizing() {
-    loc.startLocalization();
+    loc.startLocalization(traversed_zipline ? true : false);
     while (!loc.done); // Wait for localization to complete
     // We don't really have a way of knowing if the localization was a success or not, let's just
     // assume it worked like in lab 4.
+    
+    // reset the traversed_zipline boolean in case we ever need to traverse again.
+    if (traversed_zipline) {
+      traversed_zipline = false;
+    }
     return state.NAVIGATING;
   }
 
@@ -104,6 +113,11 @@ public class Controller extends Thread {
     /*
      * Tricky part.
      */
+    
+    if (zip.done) {
+      traversed_zipline = true;
+    }
+    
     return state.IDLE;
   }
   

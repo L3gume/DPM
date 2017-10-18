@@ -215,7 +215,7 @@ public class Navigation extends Thread {
       min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance
                                      // gets smaller.
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
-        driver.moveTo(dist_to_target_pos, true);
+        driver.moveForward(dist_to_target_pos, true);
         return nav_state.MOVING;
       } else {
         // if angle AND distance are both small enough, we reached the point

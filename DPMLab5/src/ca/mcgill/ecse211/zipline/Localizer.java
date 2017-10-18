@@ -18,6 +18,7 @@ public class Localizer extends Thread {
   private Driver dr;
 
   private boolean localizing = false; // Used to block the thread.
+  private boolean skip_ultrasonic = false;
   public boolean done = false;
 
   public enum loc_state {
@@ -99,7 +100,9 @@ public class Localizer extends Thread {
    */
   private loc_state process_notLocalized() {
     dr.rotate(360, true, true); // Start rotating
-    return localizing ? loc_state.ULTRASONIC : loc_state.IDLE;
+    
+    // Fancy ternary nonsense!
+    return localizing ? skip_ultrasonic ? loc_state.LIGHT : loc_state.ULTRASONIC : loc_state.IDLE;
   }
 
   /**
@@ -154,6 +157,12 @@ public class Localizer extends Thread {
   private loc_state process_done() {
     localizing = false;
     done = true;
+    
+    // reset
+    if (skip_ultrasonic) {
+      skip_ultrasonic = false;
+    }
+    
     return loc_state.IDLE;
   }
 
@@ -168,8 +177,11 @@ public class Localizer extends Thread {
 
   /**
    * Starts the localization process.
+   * 
+   * @param skip_ultrasonic set to true s to skip ultrasonic localization.
    */
-  public synchronized void startLocalization() {
+  public synchronized void startLocalization(boolean skip_ultrasonic) {
+    this.skip_ultrasonic = skip_ultrasonic;
     localizing = true;
   }
   

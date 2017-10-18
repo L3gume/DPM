@@ -17,8 +17,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 
 public class Driver {
-  private static final int FORWARD_SPEED = 125;
-  private static final int ROTATE_SPEED = 75;
   // The PController won't be necessary for this lab.
   // PController pCont;
   EV3LargeRegulatedMotor leftMotor;
@@ -43,8 +41,8 @@ public class Driver {
   public void rotate(double angle, boolean use_degrees, boolean ret) {
     leftMotor.setAcceleration(500);
     rightMotor.setAcceleration(500);
-    leftMotor.setSpeed(ROTATE_SPEED);
-    rightMotor.setSpeed(ROTATE_SPEED);
+    leftMotor.setSpeed(ZipLineLab.ROTATE_SPEED);
+    rightMotor.setSpeed(ZipLineLab.ROTATE_SPEED);
     if (!use_degrees) {
       angle = Math.toDegrees(angle);
     }
@@ -60,11 +58,11 @@ public class Driver {
     }
   }
 
-  public void moveTo(double dist, boolean ret) {
+  public void moveForward(double dist, boolean ret) {
     leftMotor.setAcceleration(3000);
     rightMotor.setAcceleration(3000);
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
+    rightMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
     leftMotor.rotate(convertDistance(leftRadius, dist), true);
     rightMotor.rotate(convertDistance(rightRadius, dist), false || ret);
   }

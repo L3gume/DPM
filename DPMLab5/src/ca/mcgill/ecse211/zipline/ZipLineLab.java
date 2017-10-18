@@ -21,25 +21,49 @@ import lejos.robotics.filter.MedianFilter;
 
 public class ZipLineLab {
 
+  /*
+   * Global Constants
+   */
   public static final boolean debug_mode = false;
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
+  
+  /*
+   * Odometry and Driver Constants
+   */
+  public static final double WHEEL_RADIUS = 2.1;
+  public static final double TRACK = 9.545;
+  public static final int FORWARD_SPEED = 125;
+  public static final int ROTATE_SPEED = 75;
   
   /*
    * Light Localization Constants
    */
   public static final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
   public static final float LIGHT_THRESHOLD = 0.37f;
+  public static Waypoint ZIPLINE_END_POS;
   
   /*
-   * Ultrasonic Localization Constant
+   * Ultrasonic Localization Constants
    */
   public static final float RISING_DIST_THRESHOLD = 30.f;
   public static final float FALLING_DIST_THRESHOLD = 70.f;
   
+  /*
+   * Zipline Controller Constants
+   */
+  public static final double ZIPLINE_ORIENTATION = Math.toRadians(180); // TODO: Temporary value for orientation of zipline.
+  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1);
+  public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
+  public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
+  
+  /*
+   * Motors and Sensors
+   */
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  
   // Medium motor to which the US sensor is mounted, not used in this lab.
   @SuppressWarnings("unused")
   private static final EV3MediumRegulatedMotor sensorMotor =
@@ -57,9 +81,6 @@ public class ZipLineLab {
   private static SampleProvider cs;
   private static SampleProvider median;
   private static float[] colorData;
-
-  public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 9.545;
 
   private static Mode choice;
 
