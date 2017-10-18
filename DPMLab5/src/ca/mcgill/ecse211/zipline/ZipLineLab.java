@@ -6,6 +6,7 @@ import ca.mcgill.ecse211.zipline.Odometer;
 import ca.mcgill.ecse211.zipline.Display;
 import ca.mcgill.ecse211.zipline.UltrasonicLocalizer.Mode;
 import ca.mcgill.ecse211.zipline.UltrasonicPoller;
+import ca.mcgill.ecse211.zipline.Waypoint;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -50,7 +51,8 @@ public class ZipLineLab {
   private static Mode choice;
 
   public static void main(String[] args) {
-    int[] coordinates;
+    Waypoint coordsStart;
+    Waypoint coordsZipLine;
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
@@ -68,8 +70,11 @@ public class ZipLineLab {
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
 
+    // Display the main menu and receive the starting coordinates from the user.
+    coordsStart = new Waypoint(ZipLineLab.getCoordinates(t, "Start", 0, 3));
+
     // Display the main menu and receive zip line coordinates from the user.
-    coordinates = ZipLineLab.getZipLineCoordinates(t);
+    coordsZipLine = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line", 0, 8));
 
     Odometer odometer = new Odometer(leftMotor, rightMotor);
     Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
@@ -118,13 +123,13 @@ public class ZipLineLab {
    * @param t the EV3 LCD display to which the main menu should be output
    * @return the X/Y-coordinates of the zip line
    */
-  static int[] getZipLineCoordinates(final TextLCD t) {
+  static int[] getCoordinates(final TextLCD t, String title, int llim, int rlim) {
     boolean done = false;
 
     // Clear the display.
     t.clear();
 
-    t.drawString("Coordinates      ", 0, 0);
+    t.drawString(title, 0, 0);
     t.drawString("-----------------", 0, 1);
     t.drawString("                 ", 0, 2);
 
@@ -151,41 +156,29 @@ public class ZipLineLab {
       switch (buttonChoice) {
         // Select the x-coordinate for modification.
         case Button.ID_UP:
-          if (index == 0) {
-            break;
-          }
-
-          index = 1;
+          index = 0;
 
           break;
 
         // Select the y-coordinate for modification.
         case Button.ID_DOWN:
-          if (index == 1) {
-            break;
-          }
-
-          index = 0;
+          index = 1;
 
           break;
 
         // Decrease the currently selected coordinate value.
         case Button.ID_LEFT:
-          if (coords[0] <=  0) {
-            break;
+          if (coords[0] > llim) {
+              coords[index] -= 1;
           }
-
-          coords[index] -= 1;
 
           break;
 
         // Increase the currently selected coordinate value.
         case Button.ID_RIGHT:
-          if (coords[0] >= 12) {
-            break;
+          if (coords[0] < rlim) {
+              coords[index] += 1;
           }
-
-          coords[index] += 1;
 
           break;
 
