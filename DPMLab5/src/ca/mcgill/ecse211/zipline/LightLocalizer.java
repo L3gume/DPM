@@ -11,9 +11,6 @@ public class LightLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
-  private final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
-  private final float LIGHT_THRESHOLD = 0.37f;
-
   private int line_count = 0; // We will detect 4 lines in this lab
   private double[] angles = new double[4];
 
@@ -67,8 +64,8 @@ public class LightLocalizer extends Thread {
      * We also assume that both coordinates of the robot will always be negative.
      */
     
-    double x_pos = -SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
-    double y_pos = -SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
+    double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
+    double y_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
     
     // Both negative.
     if (x_pos > 0) {
@@ -91,8 +88,7 @@ public class LightLocalizer extends Thread {
    * meaning we detected a line.
    */
   private void waitForLine() {
-    while (getLightLevel() > LIGHT_THRESHOLD && getLightLevel() > 0.1f) {
-    } ;
+    while (getLightLevel() > ZipLineLab.LIGHT_THRESHOLD && getLightLevel() > 0.1f);
     Sound.setVolume(70);
     Sound.beep();
     return;

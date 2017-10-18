@@ -21,7 +21,21 @@ import lejos.robotics.filter.MedianFilter;
 
 public class ZipLineLab {
 
-  public static final boolean debug_mode = true;
+  public static final boolean debug_mode = false;
+  public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
+  
+  /*
+   * Light Localization Constants
+   */
+  public static final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
+  public static final float LIGHT_THRESHOLD = 0.37f;
+  
+  /*
+   * Ultrasonic Localization Constant
+   */
+  public static final float RISING_DIST_THRESHOLD = 30.f;
+  public static final float FALLING_DIST_THRESHOLD = 70.f;
+  
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final EV3LargeRegulatedMotor rightMotor =
@@ -94,42 +108,11 @@ public class ZipLineLab {
       Odometer odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
       Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
       UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
-      UltrasonicPoller u = new UltrasonicPoller(mean, usData, ul);
+      UltrasonicPoller u = new UltrasonicPoller(mean, usData);
       LightLocalizer ll = new LightLocalizer(d, odometer);
-      ColorPoller cp = new ColorPoller(median, colorData, ll);
+      ColorPoller cp = new ColorPoller(median, colorData);
       Navigation nav = new Navigation(d, odometer, u);
-      Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
-      
-      /*
-       * Thread to detect early exits.
-       */
-      (new Thread() {
-        public void run() {
-          while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-          System.exit(0);
-        }
-      }).start();
-      
-      
-      // "scripted" part for the action sequence. A state machine and goal queue would be better.
-      odometer.start();
-      odometryDisplay.start();
-      u.start();
-      ul.start();
-      
-      while (!ul.done);
-      d.rotate(45, true, false);
-      d.moveTo(5.0, false);
-      cp.start();
-      while (!cp.isAlive()); // Make sure the color poller thread is alive before starting the localization.
-      ll.start();
-      while (!ll.done);      
-      nav.start();
-      nav.setNavigating(true);
-      nav.setPath(new Waypoint[] {new Waypoint(0,0)});
-      
-      while (nav.isNavigating());
-      d.rotate(-odometer.getTheta(), false, false);
+      Display odometryDisplay = new Display(odometer, t, nav, ul, ll);     
     }
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);

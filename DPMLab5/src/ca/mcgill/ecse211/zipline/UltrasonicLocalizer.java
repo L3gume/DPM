@@ -16,12 +16,6 @@ public class UltrasonicLocalizer extends Thread {
     FALLING_EDGE, RISING_EDGE, INVALID
   };
   private Mode mode = Mode.INVALID; // default value, should never stay that way.
-  
-  /*
-   * Localization Constant(s)
-   */
-  private final float RISING_DIST_THRESHOLD = 30.f;
-  private final float FALLING_DIST_THRESHOLD = 70.f;
 
   /*
    * Localization Variables
@@ -52,17 +46,7 @@ public class UltrasonicLocalizer extends Thread {
    */
   public void run() {
     driver.rotate(360, true, true);
-    switch (mode) {
-      case FALLING_EDGE:
-        fallingEdge();
-        break;
-      case RISING_EDGE:
-        risingEdge();
-        break;
-      case INVALID:
-        System.out.print("Invalid Ultrasonic Localizer mode, send help!");
-        break;
-    }
+    fallingEdge();
   }
 
   /*
@@ -198,13 +182,11 @@ public class UltrasonicLocalizer extends Thread {
   private void wait(Mode m) {
     Sound.setVolume(70);
     if (m == Mode.FALLING_EDGE) {
-      while (getDist() > FALLING_DIST_THRESHOLD) {
-      } ; // Wait until we capture a falling edge.
+      while (getDist() > ZipLineLab.FALLING_DIST_THRESHOLD); // Wait until we capture a falling edge.
       Sound.beep();
       return;
     } else {
-      while (getDist() < RISING_DIST_THRESHOLD) {
-      } ; // Wait until we capture a rising edge.
+      while (getDist() < ZipLineLab.RISING_DIST_THRESHOLD); // Wait until we capture a rising edge.
       Sound.beep();
       return;
     }

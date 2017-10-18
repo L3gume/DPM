@@ -12,36 +12,19 @@ package ca.mcgill.ecse211.zipline;
  */
 public class Navigation extends Thread {
 
-  /*
-   * The four different paths that were required,
-   */
-  static final Waypoint path1[] = {new Waypoint(0, 2), new Waypoint(1, 1), new Waypoint(2, 2),
-      new Waypoint(2, 1), new Waypoint(1, 0)};
-  static final Waypoint path2[] = {new Waypoint(1, 1), new Waypoint(0, 2), new Waypoint(2, 2),
-      new Waypoint(2, 1), new Waypoint(1, 0)};
-  static final Waypoint path3[] = {new Waypoint(1, 0), new Waypoint(2, 1), new Waypoint(2, 2),
-      new Waypoint(0, 2), new Waypoint(1, 1)};
-  static final Waypoint path4[] = {new Waypoint(0, 1), new Waypoint(1, 2), new Waypoint(1, 0),
-      new Waypoint(2, 1), new Waypoint(2, 2)};
-
-  static final Waypoint reportPath[] =
-      {new Waypoint(2, 1), new Waypoint(1, 1), new Waypoint(1, 2), new Waypoint(2, 0)};
-
-  public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
-
   // The list of possible states for the navigator.
-  public enum state {
-    IDLE, COMPUTING, ROTATING, MOVING, AVOIDING, REACHED_POINT
+  public enum nav_state {
+    IDLE, COMPUTING, ROTATING, MOVING, AVOIDING, REACHED_POINT, DONE
   }
 
-  private state cur_state = state.IDLE; // The current state of the navigator, starts at IDLE.
+  private nav_state cur_state = nav_state.IDLE; // The current state of the navigator, starts at IDLE.
 
   /*
    * References to other classes
    */
-  Odometer odo;
-  UltrasonicPoller uPoll;
-  Driver driver;
+  private Odometer odo;
+  private UltrasonicPoller uPoll;
+  private Driver driver;
 
   /*
    * Navigation constants
@@ -138,14 +121,14 @@ public class Navigation extends Thread {
          * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
          * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
          */
-        if (getObstacleDetected() && cur_state != state.AVOIDING
+        if (getObstacleDetected() && cur_state != nav_state.AVOIDING
             && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
           // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
           // than 15 degrees)
           // Immediately abort current action and avoid the obstacle by setting the state to
           // AVOIDING.
-          cur_state = state.AVOIDING;
-        } else if (getObstacleDetected() && cur_state != state.AVOIDING
+          cur_state = nav_state.AVOIDING;
+        } else if (getObstacleDetected() && cur_state != nav_state.AVOIDING
             && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
           // An obstacle has been detected but it isn't in my way, ignore it and set obstacle
           // detected
@@ -154,7 +137,7 @@ public class Navigation extends Thread {
         }
         if (ZipLineLab.debug_mode) {
 
-          System.out.println("Status: " + cur_state);
+          System.out.println("[NAVIGATION] Status: " + cur_state);
         }
 
         try {
@@ -173,82 +156,82 @@ public class Navigation extends Thread {
    * These methods are executed depending on the current state of the navigator. They process the
    * current state and return the new state, or the same if it's not done.
    */
-  private state process_idle() {
+  private nav_state process_idle() {
     // Being idle means we just started, intialize stuff and get started.
     target_pos = getNextWaypoint(); // Get the next waypoint in the array, the first one in this
                                     // case.
     if (target_pos != null) {
       if (ZipLineLab.debug_mode) {
-        System.out.println("[Navigation] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
+        System.out.println("[NAVIGATION] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
       }
-      return state.COMPUTING;
+      return nav_state.COMPUTING;
     }
     // Fallthrough, go back to IDLE if we don't have a target position
-    return state.IDLE;
+    return nav_state.IDLE;
   }
 
-  private state process_computing() {
+  private nav_state process_computing() {
     // Compute the distance and angle to the target position, if rotation is needed, set state to
     // rotating, if not: move.
     updateTargetInfo();
     if (ZipLineLab.debug_mode) {
-      System.out.println("Target position: " + target_pos.x + " " + target_pos.y);
+      System.out.println("[NAVIGATION] Target position: " + target_pos.x + " " + target_pos.y);
     }
 
     if (Math.abs(angle_to_target_pos) > 0) {
-      return state.ROTATING;
+      return nav_state.ROTATING;
     } else if (dist_to_target_pos > 0) {
-      return state.MOVING;
+      return nav_state.MOVING;
     }
 
     // Fallthrough, shouldn't happen.
-    return state.IDLE;
+    return nav_state.IDLE;
   }
 
-  private state process_rotating() {
+  private nav_state process_rotating() {
     updateTargetInfo();
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
       // As long as the angle to the target position is bigger than the threshold, keep rotating.
       driver.rotate(angle_to_target_pos, false, true);
-      return state.ROTATING;
+      return nav_state.ROTATING;
     } else {
       // If our angle is smaller than the threshold, then we can move, start moving!
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         min_dist = Double.MAX_VALUE; // reset
-        return state.MOVING;
+        return nav_state.MOVING;
       } else {
         // if angle AND distance are both small enough, we reached the point (happens rarely from
         // the ROTATING state).
-        return state.REACHED_POINT;
+        return nav_state.REACHED_POINT;
       }
     }
   }
 
-  private state process_moving() {
+  private nav_state process_moving() {
     updateTargetInfo();
     if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
-      return state.ROTATING; // We are a bit off, adjust.
+      return nav_state.ROTATING; // We are a bit off, adjust.
     } else if (dist_to_target_pos < min_dist) {
       min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance
                                      // gets smaller.
       if (dist_to_target_pos > DISTANCE_THRESHOLD) {
         driver.moveTo(dist_to_target_pos, true);
-        return state.MOVING;
+        return nav_state.MOVING;
       } else {
         // if angle AND distance are both small enough, we reached the point
-        return state.REACHED_POINT;
+        return nav_state.REACHED_POINT;
       }
     } else {
       // We missed the point (dist_to_target_pos > min_dist), turn around and get there!
-      return state.ROTATING;
+      return nav_state.ROTATING;
     }
   }
 
-  private state process_avoiding() {
+  private nav_state process_avoiding() {
     updateTargetInfo();
     float dist = uPoll.getDistance(); // Get the distance to the obstacle so we can make a decision
     if (ZipLineLab.debug_mode) {
-      System.out.println("[AVOIDING] Obstacle distance: " + dist);
+      System.out.println("[NAVIGATION][AVOIDING] Obstacle distance: " + dist);
     }
     // No mather what, call the avoidObstacle method, which uses the PController.
     driver.avoidObstacle(dist);
@@ -260,11 +243,11 @@ public class Navigation extends Thread {
       setObstacleDetected(false);
     }
     // Return the right state depending on whether or not we did avoid the obstacle.
-    return getObstacleDetected() && !obstacle_avoided ? state.AVOIDING : state.ROTATING;
+    return getObstacleDetected() && !obstacle_avoided ? nav_state.AVOIDING : nav_state.ROTATING;
   }
 
   // Pretty self-explanatory
-  private state process_reachedpoint() {
+  private nav_state process_reachedpoint() {
     updateTargetInfo();
     if (dist_to_target_pos < DISTANCE_THRESHOLD) {
       min_dist = Double.MAX_VALUE; // reset
@@ -272,13 +255,14 @@ public class Navigation extends Thread {
       target_pos = getNextWaypoint();
       
       if (target_pos != null) {
-        return state.COMPUTING;
+        return nav_state.COMPUTING;
       } else {
         navigating = false;
-        return state.IDLE;
+        done = true;
+        return nav_state.IDLE;
       }   
     } else {
-      return state.MOVING; // Will have to improve this.
+      return nav_state.MOVING; // Will have to improve this.
     }
   }
 
@@ -321,20 +305,20 @@ public class Navigation extends Thread {
     double x = odo.getX();
     double y = odo.getY();
 
-    double dist_x = target_pos.x * SQUARE_LENGTH - x;
-    double dist_y = target_pos.y * SQUARE_LENGTH - y;
+    double dist_x = target_pos.x * ZipLineLab.SQUARE_LENGTH - x;
+    double dist_y = target_pos.y * ZipLineLab.SQUARE_LENGTH - y;
 
     double vect_to_target[] = {dist_x, dist_y};
     dist_to_target_pos = magnitude(vect_to_target);
     angle_to_target_pos = angleToPos(vect_to_target);
 
     if (ZipLineLab.debug_mode) {
-      System.out.println("Current Position: " + x + ", " + y);
-      System.out.println("Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
-      System.out.println("Distance to target: " + dist_to_target_pos);
+      System.out.println("[NAVIGATION] Current Position: " + x + ", " + y);
+      System.out.println("[NAVIGATION] Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
+      System.out.println("[NAVIGATION] Distance to target: " + dist_to_target_pos);
       System.out
-          .println("Vector to target: [" + vect_to_target[0] + ", " + vect_to_target[1] + "]");
-      System.out.println("Angle to target: " + Math.toDegrees(angle_to_target_pos));
+          .println("[NAVIGATION] Vector to target: [" + vect_to_target[0] + ", " + vect_to_target[1] + "]");
+      System.out.println("[NAVIGATION] Angle to target: " + Math.toDegrees(angle_to_target_pos));
     }
   }
 
@@ -348,9 +332,9 @@ public class Navigation extends Thread {
     orientation_vect[1] = Math.sin(orientation_angle);
 
     if (ZipLineLab.debug_mode) {
-      System.out.println("Orientation angle: " + Math.toDegrees(orientation_angle));
+      System.out.println("[NAVIGATION] Orientation angle: " + Math.toDegrees(orientation_angle));
       System.out.println(
-          "Orientation vector: [" + orientation_vect[0] + ", " + orientation_vect[1] + "]");
+          "[NAVIGATION] Orientation vector: [" + orientation_vect[0] + ", " + orientation_vect[1] + "]");
     }
   }
 
@@ -391,40 +375,8 @@ public class Navigation extends Thread {
    * 
    * @return current state.
    */
-  public state getCurrentState() {
+  public synchronized nav_state getCurrentState() {
     return cur_state;
-  }
-
-  /**
-   * Set the path to be travelled.
-   * 
-   * @param i: the number of the path you wish to travel, from 1 to 4
-   * 
-   *        Defaults to 1 if an invalid value is passed, which should never happen anyway.
-   */
-  public void setPath(int i) {
-    switch (i) {
-      case 1:
-        this.path = path1;
-        break;
-      case 2:
-        this.path = path2;
-        break;
-      case 3:
-        this.path = path3;
-        break;
-      case 4:
-        this.path = path4;
-        break;
-      default:
-        this.path = path1;
-        break;
-    }
-
-    // Overwrite the choice if this is true. This is for gathering data for the report.
-    /*
-     * if (ZipLineLab.report_path) { this.path = reportPath; }
-     */
   }
 
   /*

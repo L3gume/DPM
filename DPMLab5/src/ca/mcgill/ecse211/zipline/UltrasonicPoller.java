@@ -13,10 +13,15 @@ public class UltrasonicPoller extends Thread {
   private float[] usData;
   private float distance;
   
-  public UltrasonicPoller(SampleProvider sample, float[] usData, UltrasonicLocalizer ul) {
+  public enum u_mode {
+    NONE, LOCALIZATION, AVOIDANCE, SEARCH
+  };
+  
+  private u_mode cur_mode = u_mode.NONE;
+  
+  public UltrasonicPoller(SampleProvider sample, float[] usData) {
     this.sample = sample;
     this.usData = usData;
-    this.ul = ul;
   }
 
   public void run() {
@@ -57,4 +62,16 @@ public class UltrasonicPoller extends Thread {
 //  public void setNav(Navigation n) {
 //    nav = n;
 //  }
+  
+  public u_mode getMode() {
+    return cur_mode;
+  }
+  
+  public void setMode(u_mode new_mode) {
+    cur_mode = new_mode;
+  }
+  
+  public void setLocalizer(UltrasonicLocalizer ul) {
+    this.ul = ul;
+  }
 }
