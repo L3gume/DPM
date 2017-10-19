@@ -40,7 +40,6 @@ public class ZipLineLab {
    */
   public static final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
   public static final float LIGHT_THRESHOLD = 0.37f;
-  public static Waypoint ZIPLINE_END_POS;
   
   /*
    * Ultrasonic Localization Constants
@@ -51,8 +50,10 @@ public class ZipLineLab {
   /*
    * Zipline Controller Constants
    */
-  public static final double ZIPLINE_ORIENTATION = Math.toRadians(180); // TODO: Temporary value for orientation of zipline.
-  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1);
+  public static Waypoint ZIPLINE_START_POS; // Is going to be inputed by the user.
+  public static Waypoint ZIPLINE_END_POS; // Is going to be computed using the inputed zipline start position.
+  public static final double ZIPLINE_ORIENTATION = 0.0;
+  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1); // Very small threshold since we have to be precise.
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
   
