@@ -20,6 +20,8 @@ public class Localizer extends Thread {
   private boolean localizing = false; // Used to block the thread.
   private boolean skip_ultrasonic = false;
   public boolean done = false;
+  
+  private Waypoint ref_pos;
 
   public enum loc_state {
     IDLE, NOT_LOCALIZED, ULTRASONIC, LIGHT, DONE
@@ -100,7 +102,12 @@ public class Localizer extends Thread {
    */
   private loc_state process_notLocalized() {
     dr.rotate(360, true, true); // Start rotating
+    // Give the reference position to both localization systems.
+    ul.setRefPos(ref_pos);
+    ll.setRefPos(ref_pos);
     
+    ul.start(); // Start the ultrasonic localizer.
+    ll.start(); // Start the light localizer.
     // Fancy ternary nonsense!
     return localizing ? skip_ultrasonic ? loc_state.LIGHT : loc_state.ULTRASONIC : loc_state.IDLE;
   }
@@ -122,7 +129,7 @@ public class Localizer extends Thread {
       System.out.println("[LOCALIZER] UltrasonicPoller not running!");
       return loc_state.IDLE; // That's a big problem.
     }
-    ul.start(); // Start the ultrasonic localizer.
+    ul.startLocalization();
     while (!ul.done); // Wait until the ultrasonic localization completes.
     return loc_state.LIGHT; // Go directly to light localization.
   }
@@ -144,7 +151,7 @@ public class Localizer extends Thread {
       System.out.println("[LOCALIZER] ColorPoller not running!");
       return loc_state.IDLE; // That's a big problem.
     }
-    ll.start();
+    ll.startLocalization();
     while (!ll.done);
     return loc_state.DONE;
   }
@@ -190,5 +197,9 @@ public class Localizer extends Thread {
    */
   public synchronized void abortLocalization() {
     localizing = false;
+  }
+  
+  public void setRefPos(Waypoint ref_pos) {
+    this.ref_pos = ref_pos;
   }
 }

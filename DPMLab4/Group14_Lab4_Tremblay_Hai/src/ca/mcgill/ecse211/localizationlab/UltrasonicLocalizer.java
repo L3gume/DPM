@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.zipline;
+package ca.mcgill.ecse211.localizationlab;
 
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -11,15 +11,17 @@ public class UltrasonicLocalizer extends Thread {
   private Driver driver;
   private Odometer odo;
 
-  private Waypoint ref_pos;
-  private int ref_angle;
-
   // Enum for the localization mode chosen by the user.
   public enum Mode {
     FALLING_EDGE, RISING_EDGE, INVALID
   };
-
   private Mode mode = Mode.INVALID; // default value, should never stay that way.
+  
+  /*
+   * Localization Constant(s)
+   */
+  private final float RISING_DIST_THRESHOLD = 30.f;
+  private final float FALLING_DIST_THRESHOLD = 70.f;
 
   /*
    * Localization Variables
@@ -32,8 +34,7 @@ public class UltrasonicLocalizer extends Thread {
 
   // checked in main to ensure we don't skip steps.
   public boolean done = false;
-  public boolean localize = false;
-
+  
   /**
    * 
    * @param mode enum value for selected localization mode.
@@ -50,11 +51,17 @@ public class UltrasonicLocalizer extends Thread {
    * Run method. It is not in a loop, it only runs once.
    */
   public void run() {
-    while (true) {
-      if (localize) {
-        driver.rotate(360, true, true);
+    driver.rotate(360, true, true);
+    switch (mode) {
+      case FALLING_EDGE:
         fallingEdge();
-      }
+        break;
+      case RISING_EDGE:
+        risingEdge();
+        break;
+      case INVALID:
+        System.out.print("Invalid Ultrasonic Localizer mode, send help!");
+        break;
     }
   }
 
@@ -65,11 +72,11 @@ public class UltrasonicLocalizer extends Thread {
   private void fallingEdge() {
     wait(mode);
     theta1 = odo.getTheta(); // Record the current theta.
-
-    if (ZipLineLab.debug_mode) {
+    
+    if (LocalizationLab.debug_mode) {
       System.out.println("theta1: " + theta1);
     }
-
+    
     driver.rotate(-360, true, true);
 
     sleepThread(3); // Wait for a bit.
@@ -77,24 +84,22 @@ public class UltrasonicLocalizer extends Thread {
     wait(mode);
     driver.rotate(0, true, false);
     theta2 = odo.getTheta();
-
-    if (ZipLineLab.debug_mode) {
+    
+    if (LocalizationLab.debug_mode) {
       System.out.println("theta2: " + theta2);
     }
-
+    
     computeOrientation();
   }
 
-  // This is left in the code just in case.
-  @SuppressWarnings("unused")
   private void risingEdge() {
-    wait(mode);
+    wait(mode);  
     theta1 = odo.getTheta(); // Record the current theta.
-
-    if (ZipLineLab.debug_mode) {
+    
+    if (LocalizationLab.debug_mode) {
       System.out.println("theta1: " + theta1);
     }
-
+    
     // Rotate in the other direction.
     driver.rotate(-360, true, true);
 
@@ -103,37 +108,49 @@ public class UltrasonicLocalizer extends Thread {
     wait(mode);
     driver.rotate(0, true, false);
     theta2 = odo.getTheta();
-
-    if (ZipLineLab.debug_mode) {
+    
+    if (LocalizationLab.debug_mode) {
       System.out.println("theta2: " + theta2);
     }
-
+    
     computeOrientation();
   }
-
+  
   /**
    * Computes the orientation of the robot using the recorded angles.
    */
   private void computeOrientation() {
-    // compute the error with the reference angle (taken from the reference position).
-    double theta_err = Math.toRadians(ref_angle) - ((theta1 + theta2) / 2);
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("current heading: " + Math.toDegrees(odo.getTheta()) + " error: "
-          + Math.toDegrees(theta_err));
+    double new_theta = -1;
+    switch (mode) {
+      case FALLING_EDGE:
+        new_theta = Math.toRadians(225.0) - ((theta1 + theta2) / 2);
+        break;
+      case RISING_EDGE:
+        new_theta = Math.toRadians(45.0) - ((theta1 + theta2) / 2);
+        break;
+      case INVALID:
+        System.out.print("Invalid Ultrasonic Localizer mode, send help!");
+        break;
     }
 
-    // Set the odometer's new orientation.
-    odo.setTheta(computeAngle(theta_err + odo.getTheta()));
-
+    if (LocalizationLab.debug_mode) {
+      System.out.println("current heading: " + Math.toDegrees(odo.getTheta()) + " error: " + Math.toDegrees(new_theta));
+    }
+    
+    odo.setTheta(computeAngle(new_theta + odo.getTheta()));
+    
+    //System.out.print("Theta: " + odo.getTheta());
+    // This can mean a long turn but hey, it's not required to do the smallest turn!
+    Button.waitForAnyPress();
+    driver.rotate(-odo.getTheta(), false, false);
+    Button.waitForAnyPress();
     done = true;
-    localize = false;
   }
 
   /*
    * Utility methods, getters and setters.
    */
-
+  
   /**
    * 
    * @param t_rad angle in radians
@@ -152,7 +169,6 @@ public class UltrasonicLocalizer extends Thread {
 
   /**
    * Used by the ultrasonic poller to pass the distance.
-   * 
    * @param dist the distace read by the ultrasonic poller
    */
   public synchronized void setDist(float dist) {
@@ -162,7 +178,6 @@ public class UltrasonicLocalizer extends Thread {
 
   /**
    * returns the last distance read by the ultrasonic sensor.
-   * 
    * @return distance (cm)
    */
   public synchronized float getDist() {
@@ -171,7 +186,6 @@ public class UltrasonicLocalizer extends Thread {
 
   /**
    * returns the previous distance
-   * 
    * @return previous distance. (cm)
    */
   public synchronized float getPrevDist() {
@@ -179,26 +193,25 @@ public class UltrasonicLocalizer extends Thread {
   }
 
   /*
-   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more
-   * readable.
+   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more readable.
    */
   private void wait(Mode m) {
     Sound.setVolume(70);
     if (m == Mode.FALLING_EDGE) {
-      while (getDist() > ZipLineLab.FALLING_DIST_THRESHOLD); // Wait until we capture a falling
-                                                             // edge.
+      while (getDist() > FALLING_DIST_THRESHOLD) {
+      } ; // Wait until we capture a falling edge.
       Sound.beep();
       return;
     } else {
-      while (getDist() < ZipLineLab.RISING_DIST_THRESHOLD); // Wait until we capture a rising edge.
+      while (getDist() < RISING_DIST_THRESHOLD) {
+      } ; // Wait until we capture a rising edge.
       Sound.beep();
       return;
     }
   }
 
   /*
-   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more
-   * readable.
+   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more readable.
    */
   private void sleepThread(float seconds) {
     try {
@@ -206,29 +219,5 @@ public class UltrasonicLocalizer extends Thread {
     } catch (Exception e) {
       // TODO: handle exception
     }
-  }
-
-  public void setRefPos(Waypoint ref_pos) {
-    this.ref_pos = ref_pos;
-    setRefAngle();
-  }
-
-  private void setRefAngle() {
-    // TODO: these positions are only for lab 5, they will have to be changed (or removed) for the
-    // final project since it's hard-coded crap.
-    if (ref_pos.x == 1 && ref_pos.y == 1) {
-      ref_angle = 45;
-    } else if (ref_pos.x == 7 && ref_pos.y == 1) {
-      ref_angle = 135;
-    } else if (ref_pos.x == 7 && ref_pos.y == 7) {
-      ref_angle = 225;
-    } else if (ref_pos.x == 1 && ref_pos.y == 7) {
-      ref_angle = 315;
-    }
-  }
-
-  public synchronized void startLocalization() {
-    done = false;
-    localize = true;
   }
 }
