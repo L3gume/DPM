@@ -22,4 +22,13 @@ public class Waypoint {
     this.x = x;
     this.y = y;
   }
+
+  /**
+   * Constructor
+   * @param coords the position in x (index 0) and y (index 1) (in grid lines)
+   */
+  public Waypoint(int[] coords) {
+      this.x = coords[0];
+      this.y = coords[1];
+  }
 }

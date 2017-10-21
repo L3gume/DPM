@@ -6,6 +6,7 @@ import ca.mcgill.ecse211.zipline.Odometer;
 import ca.mcgill.ecse211.zipline.Display;
 import ca.mcgill.ecse211.zipline.UltrasonicLocalizer.Mode;
 import ca.mcgill.ecse211.zipline.UltrasonicPoller;
+import ca.mcgill.ecse211.zipline.Waypoint;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -26,7 +27,7 @@ public class ZipLineLab {
    */
   public static final boolean debug_mode = false;
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
-  
+
   /*
    * Odometry and Driver Constants
    */
@@ -34,29 +35,33 @@ public class ZipLineLab {
   public static final double TRACK = 9.545;
   public static final int FORWARD_SPEED = 125;
   public static final int ROTATE_SPEED = 75;
-  
+
   /*
    * Light Localization Constants
    */
   public static final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
   public static final float LIGHT_THRESHOLD = 0.37f;
-  
+
   /*
    * Ultrasonic Localization Constants
    */
   public static final float RISING_DIST_THRESHOLD = 30.f;
   public static final float FALLING_DIST_THRESHOLD = 70.f;
-  
+
   /*
    * Zipline Controller Constants
    */
   public static Waypoint ZIPLINE_START_POS; // Is going to be inputed by the user.
-  public static Waypoint ZIPLINE_END_POS; // Is going to be computed using the inputed zipline start position.
+  public static Waypoint ZIPLINE_END_POS; // Is going to be computed using the inputed zipline start
+                                          // position.
   public static final double ZIPLINE_ORIENTATION = 0.0;
-  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1); // Very small threshold since we have to be precise.
+  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1); // Very small
+                                                                                // threshold since
+                                                                                // we have to be
+                                                                                // precise.
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
-  
+
   /*
    * Motors and Sensors
    */
@@ -64,7 +69,7 @@ public class ZipLineLab {
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
-  
+
   // Medium motor to which the US sensor is mounted, not used in this lab.
   @SuppressWarnings("unused")
   private static final EV3MediumRegulatedMotor sensorMotor =
@@ -78,7 +83,7 @@ public class ZipLineLab {
   private static SampleProvider mean;
   private static float[] usData;
 
-  //private static EV3ColorSensor colorSensor;
+  // private static EV3ColorSensor colorSensor;
   private static SampleProvider cs;
   private static SampleProvider median;
   private static float[] colorData;
@@ -86,7 +91,8 @@ public class ZipLineLab {
   private static Mode choice;
 
   public static void main(String[] args) {
-    int buttonChoice = -1;
+    Waypoint coordsStart;
+    Waypoint coordsZipLine;
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
@@ -96,48 +102,129 @@ public class ZipLineLab {
     us = usSensor.getMode("Distance"); // usDistance provides samples from this instance
     mean = new MeanFilter(us, us.sampleSize());
     usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
-    
+
     // Set up the color sensor.
     @SuppressWarnings("resource")
-    SensorModes colorSensor = new EV3ColorSensor(colorPort);  
+    SensorModes colorSensor = new EV3ColorSensor(colorPort);
     cs = colorSensor.getMode("Red");
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
-    
-    // Set up the menu display.
-    do {
-      // clear the display
-      t.clear();
-      // ask the user whether the motors should drive in a square or float
-      t.drawString("Left: Rising Edge", 0, 0);
-      t.drawString("Right: Falling Edge", 0, 1);
-      buttonChoice = Button.waitForAnyPress();
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
 
-    switch (buttonChoice) {
-      case Button.ID_LEFT:
-        choice = Mode.RISING_EDGE;
-        break;
-      case Button.ID_RIGHT:
-        choice = Mode.FALLING_EDGE;
-        break;
-      default:
-        System.exit(0);
-        break;
-    }
-    
-    if (buttonChoice == Button.ID_LEFT || buttonChoice == Button.ID_RIGHT) {
-      Odometer odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
-      Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-      UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
-      UltrasonicPoller u = new UltrasonicPoller(mean, usData);
-      LightLocalizer ll = new LightLocalizer(d, odometer);
-      ColorPoller cp = new ColorPoller(median, colorData);
-      Navigation nav = new Navigation(d, odometer, u);
-      Display odometryDisplay = new Display(odometer, t, nav, ul, ll);     
-    }
-    
+    // Display the main menu and receive the starting coordinates from the user.
+    coordsStart = new Waypoint(ZipLineLab.getCoordinates(t, "Start", 0, 3));
+
+    // Display the main menu and receive zip line coordinates from the user.
+    coordsZipLine = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line", 0, 8));
+
+    //
+    // TODO: Create Controller and ZiplineController instances.
+    //
+    //
+    //
+    // Constructors (now):
+    //
+    // Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip)
+    //
+    //
+    // Constructors (after):
+    //
+    // Controller(
+    // Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip,
+    // Waypoint coordsStart, Waypoint coordsZipLine
+    // )
+    //
+
+    Odometer odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
+    Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
+    UltrasonicPoller u = new UltrasonicPoller(mean, usData);
+    LightLocalizer ll = new LightLocalizer(d, odometer);
+    ColorPoller cp = new ColorPoller(median, colorData);
+    Navigation nav = new Navigation(d, odometer, u);
+    Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
+
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }
+
+  /**
+   * Display the main menu, querying the user for the X/Y-coordinates of the zip line.
+   * 
+   * @param t the EV3 LCD display to which the main menu should be output
+   * @return the X/Y-coordinates of the zip line
+   */
+  static int[] getCoordinates(final TextLCD t, String title, int llim, int rlim) {
+    boolean done = false;
+
+    // Clear the display.
+    t.clear();
+
+    t.drawString(title, 0, 0);
+    t.drawString("-----------------", 0, 1);
+    t.drawString("                 ", 0, 2);
+
+    int[] coords = new int[] {0, 0};
+
+    int index = 0;
+
+    while (!done) {
+      int buttonChoice = -1;
+
+      // Clear the current x/y-coordinate values.
+      t.drawString("X:               ", 0, 3);
+      t.drawString("Y:               ", 0, 4);
+
+      // Print the current x/y-coordinate values.
+      t.drawString(String.format("%2d", coords[0]), 3, 3);
+      t.drawString(String.format("%2d", coords[0]), 3, 4);
+
+      // Draw the indicator showing which coordinate value is currently selected.
+      t.drawString("<--", 12, 3 + index);
+
+      buttonChoice = Button.waitForAnyPress();
+
+      switch (buttonChoice) {
+        // Select the x-coordinate for modification.
+        case Button.ID_UP:
+          index = 0;
+
+          break;
+
+        // Select the y-coordinate for modification.
+        case Button.ID_DOWN:
+          index = 1;
+
+          break;
+
+        // Decrease the currently selected coordinate value.
+        case Button.ID_LEFT:
+          if (coords[0] > llim) {
+            coords[index] -= 1;
+          }
+
+          break;
+
+        // Increase the currently selected coordinate value.
+        case Button.ID_RIGHT:
+          if (coords[0] < rlim) {
+            coords[index] += 1;
+          }
+
+          break;
+
+        // Submit selected coordinates.
+        case Button.ID_ENTER:
+          done = true;
+
+          break;
+
+        // Ignore.
+        default:
+          break;
+      }
+    }
+
+    return coords;
+  }
+
 }
