@@ -183,7 +183,7 @@ public class ZipLineLab {
 
       // Print the current x/y-coordinate values.
       t.drawString(String.format("%2d", coords[0]), 3, 3);
-      t.drawString(String.format("%2d", coords[0]), 3, 4);
+      t.drawString(String.format("%2d", coords[1]), 3, 4);
 
       // Draw the indicator showing which coordinate value is currently selected.
       t.drawString("<--", 12, 3 + index);
@@ -205,7 +205,7 @@ public class ZipLineLab {
 
         // Decrease the currently selected coordinate value.
         case Button.ID_LEFT:
-          if (coords[0] > llim) {
+          if (coords[index] > llim) {
             coords[index] -= 1;
           }
 
@@ -213,7 +213,7 @@ public class ZipLineLab {
 
         // Increase the currently selected coordinate value.
         case Button.ID_RIGHT:
-          if (coords[0] < rlim) {
+          if (coords[index] < rlim) {
             coords[index] += 1;
           }
 
