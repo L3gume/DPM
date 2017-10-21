@@ -45,6 +45,9 @@ public class Localizer extends Thread {
     this.up = up;
     this.cp = cp;
     this.dr = dr;
+    
+    ul.start(); // Start the ultrasonic localizer.
+    ll.start(); // Start the light localizer.
   }
 
   /**
@@ -106,8 +109,6 @@ public class Localizer extends Thread {
     ul.setRefPos(ref_pos);
     ll.setRefPos(ref_pos);
     
-    ul.start(); // Start the ultrasonic localizer.
-    ll.start(); // Start the light localizer.
     // Fancy ternary nonsense!
     return localizing ? skip_ultrasonic ? loc_state.LIGHT : loc_state.ULTRASONIC : loc_state.IDLE;
   }
@@ -201,5 +202,7 @@ public class Localizer extends Thread {
   
   public void setRefPos(Waypoint ref_pos) {
     this.ref_pos = ref_pos;
+    ul.setRefPos(this.ref_pos);
+    ll.setRefPos(this.ref_pos);
   }
 }

@@ -66,8 +66,10 @@ public class ZipLineLab {
    * Motors and Sensors
    */
   private static final EV3LargeRegulatedMotor leftMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
   private static final EV3LargeRegulatedMotor rightMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  private static final EV3LargeRegulatedMotor zipMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
   // Medium motor to which the US sensor is mounted, not used in this lab.
@@ -132,16 +134,21 @@ public class ZipLineLab {
     // Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip,
     // Waypoint coordsStart, Waypoint coordsZipLine
     // )
-    //
+    //er
 
-    Odometer odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
-    Driver d = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, d, odometer);
-    UltrasonicPoller u = new UltrasonicPoller(mean, usData);
-    LightLocalizer ll = new LightLocalizer(d, odometer);
+    Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
+    Driver dr = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);
+    UltrasonicPoller up = new UltrasonicPoller(mean, usData);
+    LightLocalizer ll = new LightLocalizer(dr, odo);
     ColorPoller cp = new ColorPoller(median, colorData);
-    Navigation nav = new Navigation(d, odometer, u);
-    Display odometryDisplay = new Display(odometer, t, nav, ul, ll);
+    Navigation nav = new Navigation(dr, odo, up);
+    Display odometryDisplay = new Display(odo, t, nav, ul, ll);
+    Localizer loc = new Localizer(ul, ll, up, cp, dr);
+    ZiplineController zip = new ZiplineController(odo, dr, zipMotor);
+    
+    Controller cont = new Controller(odo, dr, nav, loc, zip);
+    cont.setStartingPos(coordsStart);
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);

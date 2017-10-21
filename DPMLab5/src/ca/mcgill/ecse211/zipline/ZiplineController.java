@@ -14,8 +14,8 @@ public class ZiplineController extends Thread {
   private Driver dr;
   private EV3LargeRegulatedMotor zip_motor;
   
-  private Waypoint zipline_start_position;
-  private Waypoint zipline_end_position;
+//  private Waypoint zipline_start_position;
+//  private Waypoint zipline_end_position;
   
   //TODO: See if it is possible to use the color sensor at the back of the robot to determine if the robot is touching the ground or not.
 

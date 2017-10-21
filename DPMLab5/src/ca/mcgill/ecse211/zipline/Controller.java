@@ -40,6 +40,7 @@ public class Controller extends Thread {
     odo.start();
     nav.start();
     loc.start();
+    zip.start();
   }
 
   /**
@@ -141,5 +142,9 @@ public class Controller extends Thread {
     
     // fallthrough
     return state.IDLE.toString();
+  }
+  
+  public void setStartingPos(Waypoint start_pos) {
+    loc.setRefPos(start_pos);
   }
 }
