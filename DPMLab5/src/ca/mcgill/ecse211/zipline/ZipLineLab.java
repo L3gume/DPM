@@ -127,24 +127,6 @@ public class ZipLineLab {
     // Display the main menu and receive zip line coordinates from the user.
     coordsZipLine = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line", 0, 8));
 
-    //
-    // TODO: Create Controller and ZiplineController instances.
-    //
-    //
-    //
-    // Constructors (now):
-    //
-    // Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip)
-    //
-    //
-    // Constructors (after):
-    //
-    // Controller(
-    // Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip,
-    // Waypoint coordsStart, Waypoint coordsZipLine
-    // )
-    // er
-
     Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
     Driver dr = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
     UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);

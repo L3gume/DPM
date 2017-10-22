@@ -198,6 +198,7 @@ public class UltrasonicLocalizer {
     try {
       Thread.sleep((long) (seconds * 1000));
     } catch (Exception e) {
+      System.out.println("[ULTRASONIC] Can't sleep thread");
       // TODO: handle exception
     }
   }
@@ -219,10 +220,5 @@ public class UltrasonicLocalizer {
     } else if (ref_pos.x == 1 && ref_pos.y == 7) {
       ref_angle = 315;
     }
-  }
-
-  public synchronized void startLocalization() {
-    done = false;
-    localize = true;
   }
 }
