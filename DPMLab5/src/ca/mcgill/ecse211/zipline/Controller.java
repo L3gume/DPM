@@ -15,6 +15,8 @@ public class Controller extends Thread {
 
   private state cur_state = state.IDLE;
   private boolean traversed_zipline = false;
+  private boolean reached_zipline = false;
+  private boolean at_zipline = false;
 
   /**
    * Constructor
@@ -35,12 +37,13 @@ public class Controller extends Thread {
     init();
   }
 
-  // Might be better to start the threads when we need them.
+  /**
+   * Starts all the threads.
+   */
   private void init() {
     odo.start();
-    nav.start();
+    //nav.start();
     loc.start();
-    zip.start();
   }
 
   /**
@@ -69,7 +72,7 @@ public class Controller extends Thread {
       }
 
       try {
-        Thread.sleep(20);
+        Thread.sleep(40);
       } catch (Exception e) {
         // ...
       }
@@ -86,7 +89,7 @@ public class Controller extends Thread {
   }
 
   public state process_localizing() {
-    loc.startLocalization(traversed_zipline ? true : false);
+    loc.startLocalization(traversed_zipline || reached_zipline ? true : false);
     while (!loc.done); // Wait for localization to complete
     // We don't really have a way of knowing if the localization was a success or not, let's just
     // assume it worked like in lab 4.
@@ -95,14 +98,30 @@ public class Controller extends Thread {
     if (traversed_zipline) {
       traversed_zipline = false;
     }
+    if (!reached_zipline) {
+      nav.setPath(new Waypoint[] {new Waypoint(1, ZipLineLab.START_POS.y), ZipLineLab.ZIPLINE_START_POS});
+    } else if (reached_zipline && !at_zipline) {
+      nav.setPath(new Waypoint[] {ZipLineLab.ZIPLINE_START_POS});
+    }
+    
     return state.NAVIGATING;
   }
 
   public state process_navigating() {
-    // Need verification of the current path.
-    nav.setNavigating(true);
-    while (!nav.done); // Wait for navigation to complete.
-    return state.IDLE;
+    if (ZipLineLab.debug_mode) {
+      System.out.println("[CONTROLLER] Entering navigation");
+    }
+    
+    nav.process();
+    if (nav.done && !reached_zipline) {
+      // TODO: implement position check.
+      reached_zipline = true;
+      loc.setRefPos(ZipLineLab.ZIPLINE_START_POS);
+    } else if (nav.done && reached_zipline) {
+      at_zipline = true;
+      reached_zipline = false;
+    }
+    return nav.done ? at_zipline ? state.ZIPLINE: state.LOCALIZING : state.NAVIGATING;
   }
 
   public state process_searching() {
@@ -114,12 +133,12 @@ public class Controller extends Thread {
     /*
      * Tricky part.
      */
-    
+    zip.process();
     if (zip.done) {
       traversed_zipline = true;
     }
     
-    return state.IDLE;
+    return zip.done ? state.IDLE : state.ZIPLINE;
   }
   
   public synchronized state getCurrentState() {
@@ -137,7 +156,7 @@ public class Controller extends Thread {
       case LOCALIZING: return loc.getCurrentState().toString();
       case NAVIGATING: return nav.getCurrentState().toString();
       case SEARCHING: return null;
-      case ZIPLINE: return null;
+      case ZIPLINE: return zip.getCurrentState().toString();
     }
     
     // fallthrough

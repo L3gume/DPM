@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.zipline;
 
 import ca.mcgill.ecse211.zipline.ColorPoller.l_mode;
 import ca.mcgill.ecse211.zipline.UltrasonicPoller.u_mode;
+import lejos.hardware.Button;
 
 /**
  * Handles the localization of the robot.
@@ -27,7 +28,7 @@ public class Localizer extends Thread {
     IDLE, NOT_LOCALIZED, ULTRASONIC, LIGHT, DONE
   };
 
-  private loc_state cur_state;
+  private loc_state cur_state = loc_state.IDLE;
 
   /**
    * Constructor
@@ -46,8 +47,11 @@ public class Localizer extends Thread {
     this.cp = cp;
     this.dr = dr;
     
-    ul.start(); // Start the ultrasonic localizer.
-    ll.start(); // Start the light localizer.
+    up.setLocalizer(ul);
+    cp.setLocalizer(ll);
+    
+    up.start();
+    cp.start();
   }
 
   /**
@@ -80,7 +84,7 @@ public class Localizer extends Thread {
        */
       
       try {
-        Thread.sleep(20);
+        Thread.sleep(40);
       } catch (Exception e) {
         // ...
       }
@@ -105,9 +109,6 @@ public class Localizer extends Thread {
    */
   private loc_state process_notLocalized() {
     dr.rotate(360, true, true); // Start rotating
-    // Give the reference position to both localization systems.
-    ul.setRefPos(ref_pos);
-    ll.setRefPos(ref_pos);
     
     // Fancy ternary nonsense!
     return localizing ? skip_ultrasonic ? loc_state.LIGHT : loc_state.ULTRASONIC : loc_state.IDLE;
@@ -124,14 +125,12 @@ public class Localizer extends Thread {
     }
     
     if (up.isAlive()) {
-      up.setLocalizer(ul);
       up.setMode(u_mode.LOCALIZATION);
     } else {
       System.out.println("[LOCALIZER] UltrasonicPoller not running!");
       return loc_state.IDLE; // That's a big problem.
     }
-    ul.startLocalization();
-    while (!ul.done); // Wait until the ultrasonic localization completes.
+    ul.localize();
     return loc_state.LIGHT; // Go directly to light localization.
   }
 
@@ -141,19 +140,17 @@ public class Localizer extends Thread {
    * @return new state
    */
   private loc_state process_light() {
-    if (!localizing) {
-      return loc_state.IDLE;
-    }
+//    if (!localizing) {
+//      return loc_state.IDLE;
+//    }
     
     if (cp.isAlive()) {
-      cp.setLocalizer(ll);
       cp.setMode(l_mode.LOCALIZATION);
     } else {
       System.out.println("[LOCALIZER] ColorPoller not running!");
       return loc_state.IDLE; // That's a big problem.
     }
-    ll.startLocalization();
-    while (!ll.done);
+    ll.localize();
     return loc_state.DONE;
   }
 
@@ -191,6 +188,7 @@ public class Localizer extends Thread {
   public synchronized void startLocalization(boolean skip_ultrasonic) {
     this.skip_ultrasonic = skip_ultrasonic;
     localizing = true;
+    done = false;
   }
   
   /**
@@ -204,5 +202,9 @@ public class Localizer extends Thread {
     this.ref_pos = ref_pos;
     ul.setRefPos(this.ref_pos);
     ll.setRefPos(this.ref_pos);
+  }
+  
+  public Waypoint getRefPos() {
+    return ref_pos;
   }
 }

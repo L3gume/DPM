@@ -7,7 +7,7 @@ import lejos.hardware.Sound;
  * 
  * @author Justin Tremblay
  */
-public class UltrasonicLocalizer extends Thread {
+public class UltrasonicLocalizer {
   private Driver driver;
   private Odometer odo;
 
@@ -19,7 +19,7 @@ public class UltrasonicLocalizer extends Thread {
     FALLING_EDGE, RISING_EDGE, INVALID
   };
 
-  private Mode mode = Mode.INVALID; // default value, should never stay that way.
+  private Mode mode = Mode.RISING_EDGE; // default value, should never stay that way.
 
   /*
    * Localization Variables
@@ -46,22 +46,16 @@ public class UltrasonicLocalizer extends Thread {
     this.odo = odo;
   }
 
-  /**
-   * Run method. It is not in a loop, it only runs once.
-   */
-  public void run() {
-    while (true) {
-      if (localize) {
-        driver.rotate(360, true, true);
-        fallingEdge();
-      }
-    }
+  public void localize() {
+    driver.rotate(360, true, true);
+    risingEdge();
   }
 
   /*
    * The two next methods are the ultrasonic localization algorithms. They could be put into the
    * same method but it is a requirement to have them separated.
    */
+  @SuppressWarnings("unused")
   private void fallingEdge() {
     wait(mode);
     theta1 = odo.getTheta(); // Record the current theta.

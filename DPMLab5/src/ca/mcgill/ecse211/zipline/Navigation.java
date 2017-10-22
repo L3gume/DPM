@@ -10,14 +10,15 @@ package ca.mcgill.ecse211.zipline;
  * @author Justin Tremblay
  *
  */
-public class Navigation extends Thread {
+public class Navigation /* extends Thread */ {
 
   // The list of possible states for the navigator.
   public enum nav_state {
     IDLE, COMPUTING, ROTATING, MOVING, AVOIDING, REACHED_POINT, DONE
   }
 
-  private nav_state cur_state = nav_state.IDLE; // The current state of the navigator, starts at IDLE.
+  private nav_state cur_state = nav_state.IDLE; // The current state of the navigator, starts at
+                                                // IDLE.
 
   /*
    * References to other classes
@@ -25,16 +26,6 @@ public class Navigation extends Thread {
   private Odometer odo;
   private UltrasonicPoller uPoll;
   private Driver driver;
-
-  /*
-   * Navigation constants
-   */
-
-  private final double ANGLE_THRESHOLD = Math.toRadians(2); // If the angle to target position is
-                                                            // lower than 2 degrees, then that's
-                                                            // good enough.
-  private final double DISTANCE_THRESHOLD = 2; // If the distance is below 2 cm, then that's good
-                                               // enough.
 
   /*
    * Navigation variables
@@ -67,7 +58,7 @@ public class Navigation extends Thread {
     this.odo = odo;
     this.uPoll = uPoll;
 
-//    uPoll.setNav(this); Not needed for this lab.
+    // uPoll.setNav(this); Not needed for this lab.
 
     min_dist = Double.MAX_VALUE;
   }
@@ -79,74 +70,65 @@ public class Navigation extends Thread {
    * also continuously look for obstacles and overwrite the curent state with the AVOIDING state if
    * needed.
    */
-  public void run() {
-    while (true) {
-      if (navigating) {
-        // To other stuff here
-        updateOrientation();
+  public void process() {
+    // while (true) {
+    // if (navigating) {
+    // To other stuff here
+    updateOrientation();
 
-        /*
-         * The base of the state machine.
-         * 
-         * This is where, depending on the current state, we choose a process_x method to continue
-         * our navigation. Each method has its specific conditions and outputs
-         */
-        switch (cur_state) {
-          case IDLE:
-            cur_state = process_idle();
-            break;
-          case COMPUTING:
-            cur_state = process_computing();
-            break;
-          case ROTATING:
-            cur_state = process_rotating();
-            break;
-          case MOVING:
-            cur_state = process_moving();
-            break;
-          case AVOIDING:
-            cur_state = process_avoiding();
-            break;
-          case REACHED_POINT:
-            cur_state = process_reachedpoint();
-            break;
-          // There should never be a default case
-          default:
-            break;
-        }
+    /*
+     * The base of the state machine.
+     * 
+     * This is where, depending on the current state, we choose a process_x method to continue our
+     * navigation. Each method has its specific conditions and outputs
+     */
+    switch (cur_state) {
+      case IDLE:
+        cur_state = process_idle();
+        break;
+      case COMPUTING:
+        cur_state = process_computing();
+        break;
+      case ROTATING:
+        cur_state = process_rotating();
+        break;
+      case MOVING:
+        cur_state = process_moving();
+        break;
+      case AVOIDING:
+        cur_state = process_avoiding();
+        break;
+      case REACHED_POINT:
+        cur_state = process_reachedpoint();
+        break;
+      // There should never be a default case
+      default:
+        break;
+    }
 
-        /**
-         * Obstacle detectection
-         * 
-         * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
-         * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
-         */
-        if (getObstacleDetected() && cur_state != nav_state.AVOIDING
-            && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
-          // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
-          // than 15 degrees)
-          // Immediately abort current action and avoid the obstacle by setting the state to
-          // AVOIDING.
-          cur_state = nav_state.AVOIDING;
-        } else if (getObstacleDetected() && cur_state != nav_state.AVOIDING
-            && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
-          // An obstacle has been detected but it isn't in my way, ignore it and set obstacle
-          // detected
-          // back to false;
-          setObstacleDetected(false);
-        }
-        if (ZipLineLab.debug_mode) {
+    /**
+     * Obstacle detectection
+     * 
+     * The obstacle_detected variable is modified by the ultrasonic poller when it detects low
+     * distances. The Navigator then decides whether or not it is going to avoid the obstacle.
+     */
+    if (getObstacleDetected() && cur_state != nav_state.AVOIDING
+        && Math.abs(angle_to_target_pos) < Math.toRadians(15)) {
+      // The ultrasonic poller has detected an obstacle and it is in my way (angle to pos lower
+      // than 15 degrees)
+      // Immediately abort current action and avoid the obstacle by setting the state to
+      // AVOIDING.
+      cur_state = nav_state.AVOIDING;
+    } else if (getObstacleDetected() && cur_state != nav_state.AVOIDING
+        && Math.abs(angle_to_target_pos) > Math.toRadians(15)) {
+      // An obstacle has been detected but it isn't in my way, ignore it and set obstacle
+      // detected
+      // back to false;
+      setObstacleDetected(false);
+    }
+    if (ZipLineLab.debug_mode) {
 
-          System.out.println("[NAVIGATION] Status: " + cur_state);
-        }
-
-        try {
-          Thread.sleep(30);
-        } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
-      }
+      System.out.println("[NAVIGATION] Status: " + cur_state);
     }
   }
 
@@ -162,11 +144,13 @@ public class Navigation extends Thread {
                                     // case.
     if (target_pos != null) {
       if (ZipLineLab.debug_mode) {
-        System.out.println("[NAVIGATION] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
+        System.out
+            .println("[NAVIGATION] Target Acquired: [" + target_pos.x + "; " + target_pos.y + "]");
       }
       return nav_state.COMPUTING;
     }
     // Fallthrough, go back to IDLE if we don't have a target position
+    done = true; // We ran out of waypoints.
     return nav_state.IDLE;
   }
 
@@ -190,13 +174,13 @@ public class Navigation extends Thread {
 
   private nav_state process_rotating() {
     updateTargetInfo();
-    if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
+    if (Math.abs(angle_to_target_pos) > ZipLineLab.ANGLE_THRESHOLD) {
       // As long as the angle to the target position is bigger than the threshold, keep rotating.
       driver.rotate(angle_to_target_pos, false, true);
       return nav_state.ROTATING;
     } else {
       // If our angle is smaller than the threshold, then we can move, start moving!
-      if (dist_to_target_pos > DISTANCE_THRESHOLD) {
+      if (dist_to_target_pos > ZipLineLab.DISTANCE_THRESHOLD) {
         min_dist = Double.MAX_VALUE; // reset
         return nav_state.MOVING;
       } else {
@@ -209,12 +193,12 @@ public class Navigation extends Thread {
 
   private nav_state process_moving() {
     updateTargetInfo();
-    if (Math.abs(angle_to_target_pos) > ANGLE_THRESHOLD) {
+    if (Math.abs(angle_to_target_pos) > ZipLineLab.ANGLE_THRESHOLD) {
       return nav_state.ROTATING; // We are a bit off, adjust.
     } else if (dist_to_target_pos < min_dist) {
       min_dist = dist_to_target_pos; // min_dist is continuously updated as long as the distance
                                      // gets smaller.
-      if (dist_to_target_pos > DISTANCE_THRESHOLD) {
+      if (dist_to_target_pos > ZipLineLab.DISTANCE_THRESHOLD) {
         driver.moveForward(dist_to_target_pos, true);
         return nav_state.MOVING;
       } else {
@@ -238,7 +222,7 @@ public class Navigation extends Thread {
 
     // Determine if we did avoid the obstacle.
     obstacle_avoided =
-        (Math.abs(angle_to_target_pos) < ANGLE_THRESHOLD && dist > 150) ? true : false;
+        (Math.abs(angle_to_target_pos) < ZipLineLab.ANGLE_THRESHOLD && dist > 150) ? true : false;
     if (obstacle_avoided) {
       setObstacleDetected(false);
     }
@@ -249,18 +233,18 @@ public class Navigation extends Thread {
   // Pretty self-explanatory
   private nav_state process_reachedpoint() {
     updateTargetInfo();
-    if (dist_to_target_pos < DISTANCE_THRESHOLD) {
+    if (dist_to_target_pos < ZipLineLab.DISTANCE_THRESHOLD) {
       min_dist = Double.MAX_VALUE; // reset
       driver.rotate(0, true, true);
       target_pos = getNextWaypoint();
-      
+
       if (target_pos != null) {
         return nav_state.COMPUTING;
       } else {
         navigating = false;
         done = true;
         return nav_state.IDLE;
-      }   
+      }
     } else {
       return nav_state.MOVING; // Will have to improve this.
     }
@@ -314,10 +298,11 @@ public class Navigation extends Thread {
 
     if (ZipLineLab.debug_mode) {
       System.out.println("[NAVIGATION] Current Position: " + x + ", " + y);
-      System.out.println("[NAVIGATION] Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
-      System.out.println("[NAVIGATION] Distance to target: " + dist_to_target_pos);
       System.out
-          .println("[NAVIGATION] Vector to target: [" + vect_to_target[0] + ", " + vect_to_target[1] + "]");
+          .println("[NAVIGATION] Target Position: (" + target_pos.x + "; " + target_pos.y + ")");
+      System.out.println("[NAVIGATION] Distance to target: " + dist_to_target_pos);
+      System.out.println(
+          "[NAVIGATION] Vector to target: [" + vect_to_target[0] + ", " + vect_to_target[1] + "]");
       System.out.println("[NAVIGATION] Angle to target: " + Math.toDegrees(angle_to_target_pos));
     }
   }
@@ -333,8 +318,8 @@ public class Navigation extends Thread {
 
     if (ZipLineLab.debug_mode) {
       System.out.println("[NAVIGATION] Orientation angle: " + Math.toDegrees(orientation_angle));
-      System.out.println(
-          "[NAVIGATION] Orientation vector: [" + orientation_vect[0] + ", " + orientation_vect[1] + "]");
+      System.out.println("[NAVIGATION] Orientation vector: [" + orientation_vect[0] + ", "
+          + orientation_vect[1] + "]");
     }
   }
 
@@ -357,8 +342,10 @@ public class Navigation extends Thread {
         // wait for new path.
         return null;
       }
+    } else {
+      System.out.println("Path is NULL");
     }
-    return path[++waypoint_progress];
+    return path != null ? path[++waypoint_progress] : null;
   }
 
   /**
@@ -406,12 +393,14 @@ public class Navigation extends Thread {
   public synchronized boolean isNavigating() {
     return navigating;
   }
-  
+
   public synchronized void setNavigating(boolean arg) {
     this.navigating = arg;
   }
 
   public void setPath(Waypoint[] waypoints) {
     path = waypoints;
+    done = false;
+    waypoint_progress = -1;
   }
 }

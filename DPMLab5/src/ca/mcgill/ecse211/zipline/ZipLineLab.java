@@ -32,21 +32,33 @@ public class ZipLineLab {
    * Odometry and Driver Constants
    */
   public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 9.545;
-  public static final int FORWARD_SPEED = 125;
+  public static final double TRACK = 11.75;
+  public static final int FORWARD_SPEED = 175;
   public static final int ROTATE_SPEED = 75;
+  
+  /*
+   * Navigation constants
+   */
+
+  public static final double ANGLE_THRESHOLD = Math.toRadians(2); // If the angle to target position is
+                                                            // lower than 2 degrees, then that's
+                                                            // good enough.
+  public static final double DISTANCE_THRESHOLD = 2; // If the distance is below 2 cm, then that's good
+                                               // enough.
+
 
   /*
    * Light Localization Constants
    */
-  public static final double SENSOR_OFFSET = 16.9; // The actual length won't give good results.
-  public static final float LIGHT_THRESHOLD = 0.37f;
+  public static final double SENSOR_OFFSET = 19.85;
+  public static final float LIGHT_THRESHOLD = 0.53f;
+  public static Waypoint START_POS;
 
   /*
    * Ultrasonic Localization Constants
    */
-  public static final float RISING_DIST_THRESHOLD = 30.f;
-  public static final float FALLING_DIST_THRESHOLD = 70.f;
+  public static final float RISING_DIST_THRESHOLD = 40.f;
+  public static final float FALLING_DIST_THRESHOLD = 50.f;
 
   /*
    * Zipline Controller Constants
@@ -55,10 +67,7 @@ public class ZipLineLab {
   public static Waypoint ZIPLINE_END_POS; // Is going to be computed using the inputed zipline start
                                           // position.
   public static final double ZIPLINE_ORIENTATION = 0.0;
-  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(1); // Very small
-                                                                                // threshold since
-                                                                                // we have to be
-                                                                                // precise.
+  public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(2); 
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
 
@@ -77,9 +86,9 @@ public class ZipLineLab {
   private static final EV3MediumRegulatedMotor sensorMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
   // Ultrasonic sensor port.
-  private static final Port usPort = LocalEV3.get().getPort("S2");
+  private static final Port usPort = LocalEV3.get().getPort("S1");
   // Color sensor port.
-  private static final Port colorPort = LocalEV3.get().getPort("S1");
+  private static final Port colorPort = LocalEV3.get().getPort("S2");
 
   private static SampleProvider us;
   private static SampleProvider mean;
@@ -103,7 +112,7 @@ public class ZipLineLab {
     SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
     us = usSensor.getMode("Distance"); // usDistance provides samples from this instance
     mean = new MeanFilter(us, us.sampleSize());
-    usData = new float[mean.sampleSize()]; // usData is the buffer in which data are
+    usData = new float[mean.sampleSize()]; // usData is the buffer in which data are stored
 
     // Set up the color sensor.
     @SuppressWarnings("resource")
@@ -134,7 +143,7 @@ public class ZipLineLab {
     // Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip,
     // Waypoint coordsStart, Waypoint coordsZipLine
     // )
-    //er
+    // er
 
     Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
     Driver dr = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
@@ -143,12 +152,17 @@ public class ZipLineLab {
     LightLocalizer ll = new LightLocalizer(dr, odo);
     ColorPoller cp = new ColorPoller(median, colorData);
     Navigation nav = new Navigation(dr, odo, up);
-    Display odometryDisplay = new Display(odo, t, nav, ul, ll);
     Localizer loc = new Localizer(ul, ll, up, cp, dr);
     ZiplineController zip = new ZiplineController(odo, dr, zipMotor);
-    
     Controller cont = new Controller(odo, dr, nav, loc, zip);
-    cont.setStartingPos(coordsStart);
+    Display disp = new Display(odo, t, nav, ul, ll, cont);
+    disp.start();
+
+    ZIPLINE_START_POS = new Waypoint(1, 6);
+    ZIPLINE_END_POS = new Waypoint(ZIPLINE_START_POS.x + 6, ZIPLINE_START_POS.y);
+    START_POS = new Waypoint(1,1);
+    cont.setStartingPos(START_POS);
+    cont.start();
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);

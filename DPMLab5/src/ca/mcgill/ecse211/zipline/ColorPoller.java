@@ -41,7 +41,7 @@ public class ColorPoller extends Thread {
           ll.setLightLevel(lightData[0]);
         }
         try {
-          Thread.sleep(20);
+          Thread.sleep(40);
         } catch (Exception e) {
         } // Poor man's timed sampling
       } else {

@@ -26,13 +26,17 @@ public class UltrasonicPoller extends Thread {
 
   public void run() {
     // Terminate whenever the ultrasonic localizer is done to spare system resources.
-    while (!ul.done) {
+    while (true) {
         sample.fetchSample(usData, 0);
         // * 100 to convert to cm.
-        ul.setDist(usData[0] * 100.f);
-        distance = usData[0];
+        float dist = usData[0] * 100.f;
+        if (dist > 255) {
+          dist = 255;
+        }
+        ul.setDist(dist);
+        distance = dist;
       try {
-        Thread.sleep(30);
+        Thread.sleep(40);
       } catch (Exception e) {
       } // Poor man's timed sampling
     }

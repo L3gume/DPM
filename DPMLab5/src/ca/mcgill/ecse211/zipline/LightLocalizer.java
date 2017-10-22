@@ -7,7 +7,9 @@ import lejos.hardware.Sound;
  * @author Justin Tremblay
  *
  */
-public class LightLocalizer extends Thread {
+
+//TODO: Add angle correction.
+public class LightLocalizer {
   private Driver driver;
   private Odometer odo;
 
@@ -21,7 +23,6 @@ public class LightLocalizer extends Thread {
 
   private float light_level;
 
-  private boolean localize = false;
   public boolean done = false;
 
   public LightLocalizer(Driver driver, Odometer odo) {
@@ -29,23 +30,21 @@ public class LightLocalizer extends Thread {
     this.odo = odo;
   }
 
-  public void run() {
-    while (true) {
-      if (localize) {
-        driver.rotate(ref_angle - odo.getTheta(), false, false); // align to the reference angle
-        driver.rotate(360, true, true);
-        localize();
-      }
-    }
-  }
-
   /**
    * Where the magic happens. Get the heading (angle from 0 to 359.999) at the 4 lines before
    * computing the robot's position.
    */
-  private void localize() {
+  public void localize() {
+    done = false;
+    line_count = 0;
+    if (ZipLineLab.debug_mode) {
+      System.out.println("[LIGHTLOC] rotate to align: " + (ref_angle - odo.getTheta()));
+    }
+    driver.rotate(Math.toRadians(ref_angle) - odo.getTheta(), false, false); // align to the
+                                                                             // reference angle
+    driver.rotate(360, true, true);
+
     // Start by finding all the lines
-    sleepThread(1); // sleep the thread for a second to avoid false positives right off the bat.
     while (line_count != 4) {
       waitForLine();
       // The method returned, that means we found a line
@@ -55,8 +54,6 @@ public class LightLocalizer extends Thread {
       }
 
       angles[line_count++] = odo.getTheta(); // Record the angle at which we detected the line.
-
-      sleepThread(0.5f); // wait for a second to avoid multiple detections of the same line.
     }
 
     driver.rotate(0, true, false);
@@ -83,7 +80,6 @@ public class LightLocalizer extends Thread {
 
     // Notify the main method that we are done.
     done = true;
-    localize = false;
   }
 
   private static void rotateArray(double[] angles2, int order) {
@@ -110,18 +106,6 @@ public class LightLocalizer extends Thread {
     Sound.setVolume(70);
     Sound.beep();
     return;
-  }
-
-  /**
-   * Not really necessary, this is just to make the risingEdge and fallingEdge methods more
-   * readable.
-   */
-  private void sleepThread(float seconds) {
-    try {
-      Thread.sleep((long) (seconds * 1000));
-    } catch (Exception e) {
-      // TODO: handle exception
-    }
   }
 
   /*
@@ -151,12 +135,14 @@ public class LightLocalizer extends Thread {
       ref_angle = 225;
     } else if (ref_pos.x == 1 && ref_pos.y == 7) {
       ref_angle = 315;
+    } else {
+      ref_angle = 45;
     }
-  }
 
-  public synchronized void startLocalization() {
-    done = false;
-    localize = true;
+    if (ZipLineLab.debug_mode) {
+      System.out.println("[LOCALIZER] Reference position: [" + ref_pos.x + " ; " + ref_pos.y + "]");
+      System.out.println("[LOCALIZER] Reference angle: " + ref_angle);
+    }
   }
 }
 
