@@ -12,6 +12,7 @@ import lejos.hardware.Sound;
 public class LightLocalizer {
   private Driver driver;
   private Odometer odo;
+  private SensorData sd;
 
   private Waypoint ref_pos; // The reference position to localize, used to be [0,0], now can be any
                             // corner of the area.
@@ -25,9 +26,10 @@ public class LightLocalizer {
 
   public boolean done = false;
 
-  public LightLocalizer(Driver driver, Odometer odo) {
+  public LightLocalizer(Driver driver, Odometer odo, SensorData sd) {
     this.driver = driver;
     this.odo = odo;
+    this.sd = sd;
   }
 
   /**
@@ -79,6 +81,7 @@ public class LightLocalizer {
     odo.setY(y_pos);
 
     // Notify the main method that we are done.
+    sd.decrementLLRefs();
     done = true;
   }
 
@@ -143,6 +146,11 @@ public class LightLocalizer {
       System.out.println("[LOCALIZER] Reference position: [" + ref_pos.x + " ; " + ref_pos.y + "]");
       System.out.println("[LOCALIZER] Reference angle: " + ref_angle);
     }
+  }
+
+  public synchronized void startLocalization() {
+    sd.incrementLLRefs();
+    done = false;
   }
 }
 

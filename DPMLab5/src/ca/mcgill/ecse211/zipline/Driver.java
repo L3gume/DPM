@@ -58,6 +58,10 @@ public class Driver {
     }
   }
 
+  public boolean isMoving() {
+    return this.leftMotor.isMoving() || this.rightMotor.isMoving();
+  }
+
   public void moveForward(double dist, boolean ret) {
     leftMotor.setAcceleration(3000);
     rightMotor.setAcceleration(3000);

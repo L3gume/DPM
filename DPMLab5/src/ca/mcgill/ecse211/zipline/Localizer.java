@@ -47,9 +47,6 @@ public class Localizer extends Thread {
     this.cp = cp;
     this.dr = dr;
     
-    up.setLocalizer(ul);
-    cp.setLocalizer(ll);
-    
     up.start();
     cp.start();
   }

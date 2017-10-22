@@ -145,12 +145,13 @@ public class ZipLineLab {
     // )
     // er
 
+    SensorData sd = new SensorData();
     Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
     Driver dr = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
-    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);
-    UltrasonicPoller up = new UltrasonicPoller(mean, usData);
-    LightLocalizer ll = new LightLocalizer(dr, odo);
-    ColorPoller cp = new ColorPoller(median, colorData);
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo, sd);
+    UltrasonicPoller up = new UltrasonicPoller(mean, usData, sd);
+    LightLocalizer ll = new LightLocalizer(dr, odo, sd);
+    ColorPoller cp = new ColorPoller(median, colorData, sd);
     Navigation nav = new Navigation(dr, odo, up);
     Localizer loc = new Localizer(ul, ll, up, cp, dr);
     ZiplineController zip = new ZiplineController(odo, dr, zipMotor);

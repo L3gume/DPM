@@ -10,6 +10,9 @@ import lejos.hardware.Sound;
 public class UltrasonicLocalizer {
   private Driver driver;
   private Odometer odo;
+  private SensorData sd;
+
+  private Object lock;
 
   private Waypoint ref_pos;
   private int ref_angle;
@@ -32,7 +35,6 @@ public class UltrasonicLocalizer {
 
   // checked in main to ensure we don't skip steps.
   public boolean done = false;
-  public boolean localize = false;
 
   /**
    * 
@@ -40,69 +42,159 @@ public class UltrasonicLocalizer {
    * @param driver driver object that handles moving the robot.
    * @param odo odometer.
    */
-  public UltrasonicLocalizer(Mode mode, Driver driver, Odometer odo) {
+  public UltrasonicLocalizer(Mode mode, Driver driver, Odometer odo, SensorData sd) {
     this.mode = mode;
     this.driver = driver;
     this.odo = odo;
+    this.sd = sd;
   }
 
+  /**
+   * TODO: Add Javadoc description...
+   */
   public void localize() {
-    driver.rotate(360, true, true);
-    risingEdge();
+    this.fallingEdge();
+  }
+
+  /**
+   * TODO: Add Javadoc description...
+   */
+  private void edgeDetectionImpl(Mode mode) {
+    boolean edgeDetected;
+
+    this.driver.rotate(360, true, true);
+
+    edgeDetected = false;
+
+    // Detect edge #1.
+    while (this.driver.isMoving()) {
+      float d = this.sd.getUSDataLatest();
+
+      // Update the current distance returned by our SensorData object.
+      synchronized (this.lock) {
+        this.prev_dist = this.dist;
+        this.dist = d;
+      }
+
+      switch (mode) {
+        case RISING_EDGE:
+          if (d > ZipLineLab.RISING_DIST_THRESHOLD) {
+            edgeDetected = true;
+          }
+          break;
+
+        case FALLING_EDGE:
+          if (d < ZipLineLab.FALLING_DIST_THRESHOLD) {
+            edgeDetected = true;
+          }
+          break;
+
+        // Error
+        case INVALID:
+          // This should be unreachable...
+          System.out.println("error: edgeDetectionImpl(): `mode`: INVALID");
+          System.exit(1);
+      }
+
+      // Stop rotating if we have already detected the edge.
+      if (edgeDetected) {
+        break;
+      }
+
+      try {
+        Thread.sleep(30);
+      }
+      catch (Exception e) {
+        // ...
+      }
+    }
+
+    // Record the current theta.
+    this.theta1 = this.odo.getTheta();
+
+    if (ZipLineLab.debug_mode) {
+      System.out.println("theta1: " + this.theta1);
+    }
+
+    this.driver.rotate(-360, true, true);
+
+    try {
+      // Sleep for a bit, so that we don't detect the same edge.
+      Thread.sleep(1000);
+    }
+    catch (Exception e) {
+      // ...
+    }
+
+    edgeDetected = false;
+
+    // Detect edge #2.
+    while (this.driver.isMoving()) {
+      float d = this.sd.getUSDataLatest();
+
+      // Update the current distance returned by our SensorData object.
+      synchronized (this.lock) {
+        this.prev_dist = this.dist;
+        this.dist = d;
+      }
+
+      switch (mode) {
+        case RISING_EDGE:
+          if (d > ZipLineLab.RISING_DIST_THRESHOLD) {
+            edgeDetected = true;
+          }
+          break;
+
+        case FALLING_EDGE:
+          if (d < ZipLineLab.FALLING_DIST_THRESHOLD) {
+            edgeDetected = true;
+          }
+          break;
+
+        // Error
+        case INVALID:
+          // This should be unreachable...
+          System.out.println("error: edgeDetectionImpl(): `mode`: INVALID");
+          System.exit(1);
+      }
+
+      try {
+        Thread.sleep(30);
+      }
+      catch (Exception e) {
+        // ...
+      }
+    }
+
+    // Record the current theta.
+    this.theta2 = this.odo.getTheta();
+
+    // Stop rotation.
+    this.driver.rotate(0, true, false);
+
+    if (ZipLineLab.debug_mode) {
+      System.out.println("theta2: " + this.theta2);
+    }
+
+    // Compute / update the current orientation.
+    this.computeOrientation();
+
+    this.sd.decrementUSRefs();
+    this.done = true;
   }
 
   /*
    * The two next methods are the ultrasonic localization algorithms. They could be put into the
    * same method but it is a requirement to have them separated.
    */
-  @SuppressWarnings("unused")
   private void fallingEdge() {
-    wait(mode);
-    theta1 = odo.getTheta(); // Record the current theta.
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("theta1: " + theta1);
-    }
-
-    driver.rotate(-360, true, true);
-
-    sleepThread(3); // Wait for a bit.
-
-    wait(mode);
-    driver.rotate(0, true, false);
-    theta2 = odo.getTheta();
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("theta2: " + theta2);
-    }
-
-    computeOrientation();
+    this.edgeDetectionImpl(Mode.FALLING_EDGE);
   }
 
   // This is left in the code just in case.
   @SuppressWarnings("unused")
   private void risingEdge() {
-    wait(mode);
-    theta1 = odo.getTheta(); // Record the current theta.
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("theta1: " + theta1);
-    }
-
-    // Rotate in the other direction.
-    driver.rotate(-360, true, true);
-
-    sleepThread(3); // Wait for a bit.
-
-    wait(mode);
-    driver.rotate(0, true, false);
-    theta2 = odo.getTheta();
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("theta2: " + theta2);
-    }
-
-    computeOrientation();
+    this.edgeDetectionImpl(Mode.RISING_EDGE);
   }
 
   /**
@@ -119,9 +211,6 @@ public class UltrasonicLocalizer {
 
     // Set the odometer's new orientation.
     odo.setTheta(computeAngle(theta_err + odo.getTheta()));
-
-    done = true;
-    localize = false;
   }
 
   /*
@@ -145,22 +234,16 @@ public class UltrasonicLocalizer {
   }
 
   /**
-   * Used by the ultrasonic poller to pass the distance.
-   * 
-   * @param dist the distace read by the ultrasonic poller
-   */
-  public synchronized void setDist(float dist) {
-    prev_dist = this.dist;
-    this.dist = dist;
-  }
-
-  /**
    * returns the last distance read by the ultrasonic sensor.
    * 
    * @return distance (cm)
    */
-  public synchronized float getDist() {
-    return dist;
+  public float getDist() {
+    float d;
+    synchronized (this.lock) {
+      d = this.dist;
+    }
+    return d;
   }
 
   /**
@@ -222,7 +305,7 @@ public class UltrasonicLocalizer {
   }
 
   public synchronized void startLocalization() {
+    sd.incrementUSRefs();
     done = false;
-    localize = true;
   }
 }

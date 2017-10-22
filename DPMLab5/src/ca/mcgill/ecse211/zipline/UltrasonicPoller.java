@@ -8,7 +8,10 @@ import lejos.robotics.SampleProvider;
 
 public class UltrasonicPoller extends Thread {
 //  private Navigation nav; Not used in this lab. 
-  private UltrasonicLocalizer ul;
+
+  private boolean done;
+
+  private SensorData sd;
   private SampleProvider sample;
   private float[] usData;
   private float distance;
@@ -19,26 +22,49 @@ public class UltrasonicPoller extends Thread {
   
   private u_mode cur_mode = u_mode.NONE;
   
-  public UltrasonicPoller(SampleProvider sample, float[] usData) {
+  public UltrasonicPoller(SampleProvider sample, float[] usData, SensorData sd) {
+    this.done = false;
     this.sample = sample;
     this.usData = usData;
+    this.sd = sd;
   }
 
   public void run() {
-    // Terminate whenever the ultrasonic localizer is done to spare system resources.
-    while (true) {
-        sample.fetchSample(usData, 0);
+    float dist;
+
+    while (!this.done) {
+      // Stop polling data whenever the ultrasonic reference count in our
+      // SensorData object has reached zero.
+      if (this.sd.getUSRefs() > 0) {
+        this.sample.fetchSample(this.usData, 0);
+
         // * 100 to convert to cm.
-        float dist = usData[0] * 100.f;
-        if (dist > 255) {
-          dist = 255;
+        dist = this.usData[0] * 100.0f;
+        if (dist > 255.0f) {
+            dist = 255.0f;
         }
-        ul.setDist(dist);
-        distance = dist;
+
+        this.sd.ultrasonicHandler(dist);
+        this.distance = dist;
+      }
+      else {
+        // Sleep indefinitely until this thread is interrupted, signaling that sensor
+        // data may, once again, be needed.
+        try {
+          Thread.sleep(Long.MAX_VALUE);
+        }
+        catch (Exception e) {
+          // ...
+        }
+
+        continue;
+      }
+
       try {
         Thread.sleep(40);
       } catch (Exception e) {
-      } // Poor man's timed sampling
+        // ...
+      }
     }
   }
 
@@ -75,7 +101,7 @@ public class UltrasonicPoller extends Thread {
     cur_mode = new_mode;
   }
   
-  public void setLocalizer(UltrasonicLocalizer ul) {
-    this.ul = ul;
+  public void terminate() {
+    this.done = true;
   }
 }
