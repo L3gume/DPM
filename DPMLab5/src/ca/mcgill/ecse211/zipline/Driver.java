@@ -1,6 +1,3 @@
-/*
- * SquareDriver.java
- */
 package ca.mcgill.ecse211.zipline;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -15,7 +12,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * @author Justin Tremblay
  *
  */
-
 public class Driver {
   // The PController won't be necessary for this lab.
   // PController pCont;
@@ -38,6 +34,13 @@ public class Driver {
     rightMotor.setAcceleration(3000);
   }
 
+  /**
+   * Rotate the robot the requested number of degrees.
+   * 
+   * @param angle - amount to rotate the robot
+   * @param use_degrees - true for degrees, false for radians
+   * @param ret - false to move on immediately, true to wait for motor to finish rotating before moving on to other code
+   */
   public void rotate(double angle, boolean use_degrees, boolean ret) {
     leftMotor.setAcceleration(500);
     rightMotor.setAcceleration(500);
@@ -58,6 +61,12 @@ public class Driver {
     }
   }
 
+  /**
+   * Move the robot forward the requested distance.
+   * 
+   * @param dist - the distance to move forward, in cm
+   * @param ret - false to move on immediately, true to wait for motor to finish rotating before moving on to other code
+   */
   public void moveForward(double dist, boolean ret) {
     leftMotor.setAcceleration(2000);
     rightMotor.setAcceleration(2000);
@@ -85,22 +94,27 @@ public class Driver {
     rightMotor.endSynchronization();
   }
 
+  /**
+   * Avoid an obstacle, staying at the specified distance from the obstacle.
+   * 
+   * @param dist - the distance to stay away from the obstacle
+   */
   public void avoidObstacle(float dist) {
     // pCont.processUSData(dist);
   }
 
+  /**
+   * Helper methods
+   */
   private static int convertDistance(double radius, double distance) {
     return (int) ((180.0 * distance) / (Math.PI * radius));
   }
-
   private static int convertAngle(double radius, double width, double angle) {
     return convertDistance(radius, Math.PI * width * angle / 360.0);
   }
-
   public boolean isRotating() {
     return rotating;
   }
-
   public boolean isGoingForward() {
     return moving_forward;
   }

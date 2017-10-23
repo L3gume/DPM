@@ -1,11 +1,8 @@
 package ca.mcgill.ecse211.zipline;
 
-/*
- * READ THE README.md FILE!!!!! It contains info about the implementation of the Navigator
- */
-
 /**
- * Class that handles navigating the robot.
+ * Class that handles navigating the robot. Read the README.md file for information about Navigator
+ * implementation.
  * 
  * @author Justin Tremblay
  *
@@ -17,43 +14,51 @@ public class Navigation /* extends Thread */ {
     IDLE, COMPUTING, ROTATING, MOVING, AVOIDING, REACHED_POINT, DONE
   }
 
-  private nav_state cur_state = nav_state.IDLE; // The current state of the navigator, starts at
-                                                // IDLE.
+  // current state of the navigator, starts at IDLE
+  private nav_state cur_state = nav_state.IDLE; 
 
-  /*
-   * References to other classes
-   */
+  // references to other classes
   private Odometer odo;
   private UltrasonicPoller uPoll;
   private Driver driver;
   private OdometryCorrection cor;
 
-  /*
-   * Navigation variables
-   */
-
+  // Navigation variables
   private boolean navigating; // This is here only because the lab outline asks for it. It's
                               // completely useless.
 
   Waypoint[] path; // The set of waypoints the robot will have to travel, initialized by the
                    // setPath() method.
+  
   Waypoint target_pos = null; // Target waypoint
+  
   int waypoint_progress = -1; // A counter to keep track of our progress (indexing the path array)
+  
   double angle_to_target_pos; // Angle between the robot's direction and the target waypoint.
+  
   double dist_to_target_pos; // Distance to target waypoint.
+  
   double orientation_vect[] = {0.0, 1.0}; // we initially start with a theta of 90 degrees.
+  
   double orientation_angle = 90.0; // we initially start with a theta of 90 degrees.
+  
   double min_dist; // Used while moving, we constantly record the new lowest distance to the target
                    // point, when it starts going back up, we know we went past the waypoint.
+  
   boolean done = false; // This will be set to true when we reach the last waypoint, making to
                         // program end the navigation thread.
 
-  /*
-   * Obstacle avoidance variables
-   */
   private boolean obstacle_detected = false;
   private boolean obstacle_avoided = true;
 
+  /**
+   * Constructor
+   * 
+   * @param driver - Driver class
+   * @param odo - Odometer class
+   * @param uPoll - UltrasonicPoller class
+   * @param cor - OdometryCorrection class
+   */
   public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll, OdometryCorrection cor) {
     this.driver = driver;
     this.odo = odo;
@@ -67,8 +72,8 @@ public class Navigation /* extends Thread */ {
   /**
    * Run method. This is where the magic happens.
    * 
-   * This is where we run our navigation algorithm, which is really just a simple state machine. We
-   * also continuously look for obstacles and overwrite the curent state with the AVOIDING state if
+   * Run our navigation algorithm, which is really just a simple state machine. We
+   * also continuously look for obstacles and overwrite the current state with the AVOIDING state if
    * needed.
    */
   public void process() {

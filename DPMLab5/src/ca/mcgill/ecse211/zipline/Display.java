@@ -1,14 +1,10 @@
-/*
- * OdometryDisplay.java
- */
-
 package ca.mcgill.ecse211.zipline;
 
 import lejos.hardware.lcd.TextLCD;
 
 
-/*
- * Code taken from previous labs.
+/**
+ * This class outputs odometry information to the screen.
  */
 public class Display extends Thread {
   private static final long DISPLAY_PERIOD = 250;
@@ -73,6 +69,13 @@ public class Display extends Thread {
     }
   }
 
+  /**
+   * Format a double to a String.
+   * 
+   * @param x - double to be converted
+   * @param places - number of decimal places
+   * @return double in form of String
+   */
   private static String formattedDoubleToString(double x, int places) {
     String result = "";
     String stack = "";

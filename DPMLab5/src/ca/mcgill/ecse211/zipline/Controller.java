@@ -1,19 +1,28 @@
 package ca.mcgill.ecse211.zipline;
 
+/**
+ * This is a state machine defining the robot's behaviour in . 
+ * 
+ * @author Justin Tremblay
+ *
+ */
 public class Controller extends Thread {
 
+  // external classes
   private Odometer odo;
   private Driver drv;
   private Navigation nav;
   private Localizer loc;
   private ZiplineController zip;
 
-  // the SEARCHING state won't be implemented in this lab.
+  // list of states
+  // the SEARCHING state won't be implemented in Lab 5
   public enum state {
     IDLE, LOCALIZING, NAVIGATING, SEARCHING, ZIPLINE
   };
-
   private state cur_state = state.IDLE;
+  
+  // booleans to update as you progress
   private boolean traversed_zipline = false;
   private boolean reached_first_corner = false;
   private boolean skipped_loc = false;
@@ -50,7 +59,7 @@ public class Controller extends Thread {
   }
 
   /**
-   * run() method.
+   * Runs each time the thread starts.
    */
   public void run() {
     if (ZipLineLab.debug_zipling) {
@@ -86,25 +95,32 @@ public class Controller extends Thread {
   }
 
   /*
-   * State processing methods.
+   * Processing for idle state.
    */
-
   public state process_idle() {
     // For this lab, we don't need to check the goal we are given, just move to localization
     return state.LOCALIZING;
   }
-
+  
+  /**
+   * Processing for localizing state. 
+   * 
+   * @return state - the state to go to next
+   */
   public state process_localizing() {
     loc.startLocalization(
         traversed_zipline || reached_zipline || reached_first_corner ? true : false);
+    
     while (!loc.done); // Wait for localization to complete
     // We don't really have a way of knowing if the localization was a success or not, let's just
-    // assume it worked like in lab 4.
+    // assume it worked like in Lab 4.
 
     // reset the traversed_zipline boolean in case we ever need to traverse again.
     if (traversed_zipline) {
       traversed_zipline = false;
     }
+    
+    // navigate to the next required point
     if (!reached_first_corner && !reached_zipline) {
       if (ZipLineLab.START_POS.x != 1) {
         nav.setPath(new Waypoint[] {ZipLineLab.START_POS, new Waypoint(1, ZipLineLab.START_POS.y)});
@@ -113,6 +129,8 @@ public class Controller extends Thread {
         skipped_loc = true;
       }
     }
+    
+    // when at the first corner, set path toward zipline
     if (reached_first_corner && !reached_zipline) {
       if (skipped_loc) {
         nav.setPath(new Waypoint[] {ZipLineLab.START_POS, ZipLineLab.ZIPLINE_START_POS});
@@ -126,49 +144,78 @@ public class Controller extends Thread {
     return state.NAVIGATING;
   }
 
+  /**
+   * Processing for navigating state.
+   * 
+   * @return state - the state to go to next
+   */
   public state process_navigating() {
     if (ZipLineLab.debug_mode) {
       System.out.println("[CONTROLLER] Entering navigation");
     }
-
+    // perform navigation processing in Navigation class
     nav.process();
+    
+    // we've reached the first corner, set the reference position
     if (nav.done && !reached_first_corner) {
       reached_first_corner = true;
       loc.setRefPos(new Waypoint(1, ZipLineLab.START_POS.y));
-    } else if (nav.done && !reached_zipline) {
+    } 
+    // we've reached the zipline, set the reference position
+    else if (nav.done && !reached_zipline) {
       // TODO: implement position check.
       reached_zipline = true;
       loc.setRefPos(ZipLineLab.ZIPLINE_START_POS);
-    } else if (nav.done && reached_zipline) {
+    } 
+    // we're ready for final zipline alignment
+    else if (nav.done && reached_zipline) {
       at_zipline = true;
       reached_zipline = false;
     }
+    
+    // go to the next state as needed
     return nav.done ? at_zipline ? state.ZIPLINE : state.LOCALIZING : state.NAVIGATING;
   }
-
+  
+  /**
+   * Processing for searching state.
+   * 
+   * @return state - the next state to move to
+   */
   public state process_searching() {
     // Not implemented in this lab.
     return state.IDLE;
   }
 
+  /**
+   * Processing for zipline state.
+   * 
+   * @return state - the next state to move to
+   */
   public state process_zipline() {
-    /*
-     * Tricky part.
-     */
-    zip.process();
+    // perform zipline processing in the ZiplineController class
+	zip.process();
+	
+	// change the boolean when done
     if (zip.done) {
       traversed_zipline = true;
     }
 
+    // go to the next state as needed
     return zip.done ? state.IDLE : state.ZIPLINE;
   }
 
+  /**
+   * Update state.
+   * 
+   * @return state - current state
+   */
   public synchronized state getCurrentState() {
     return cur_state;
   }
 
   /**
-   * Returns the substate in the form of a string (since they're all different types
+   * Returns the sub-state in the form of a string (since they're all different types)
    * 
    * @return substate
    */
