@@ -70,7 +70,7 @@ public class ZipLineLab {
   public static final double ZIPLINE_ORIENTATION_THRESHOLD = Math.toRadians(2); 
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
-  public static final double FLOOR_LIGHT_READING = 100;		// TODO: calibrate this
+  public static final double FLOOR_LIGHT_READING = 65;		// TODO: calibrate this
 
   /*
    * Motors and Sensors
