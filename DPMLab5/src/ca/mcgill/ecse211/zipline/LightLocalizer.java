@@ -78,18 +78,18 @@ public class LightLocalizer {
     double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
     double y_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
 
-//    if (ref_pos.y == 7) {
-//      // we are over the x axis
-//      if (y_pos < 0) {
-//        y_pos *= -1;
-//      }
-//    }
-//    if (ref_pos.x == 7) {
-//      // we are past the y axis
-//      if (x_pos < 0) {
-//        x_pos *= -1;
-//      }
-//    }
+    if (ref_pos.y == 7) {
+      // we are over the x axis
+      if (y_pos < 0) {
+        y_pos *= -1;
+      }
+    }
+    if (ref_pos.x == 7) {
+      // we are past the y axis
+      if (x_pos < 0) {
+        x_pos *= -1;
+      }
+    }
 
     x_pos = ref_pos.x * ZipLineLab.SQUARE_LENGTH + x_pos;
     y_pos = ref_pos.y * ZipLineLab.SQUARE_LENGTH + y_pos;

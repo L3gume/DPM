@@ -1,18 +1,11 @@
 package ca.mcgill.ecse211.zipline;
 
 import lejos.hardware.Sound;
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
-import lejos.robotics.filter.MedianFilter;
 
 public class OdometryCorrection extends Thread {
   private static final long CORRECTION_PERIOD = 30;
   private Odometer odometer;
   private float light_level;
-  private float prev_light_level;
   long line_detected_time;
   private int line_count;
 
@@ -42,7 +35,7 @@ public class OdometryCorrection extends Thread {
       correctionStart = System.currentTimeMillis();
       waitForLine();
 
-      if (System.currentTimeMillis() - line_detected_time > 3000) {
+      if (System.currentTimeMillis() - line_detected_time > 4000) {
         Sound.setVolume(70);
         if (correct) {
           Sound.beepSequenceUp();
@@ -95,6 +88,9 @@ public class OdometryCorrection extends Thread {
             // interrupted by another thread
           }
         }
+      } else if (System.currentTimeMillis() - line_detected_time > 9000) {
+        // it's been too long, we missed lines.
+        prev_pos[0] = -1;
       }
       line_detected_time = System.currentTimeMillis(); // Capture the last time we crossed a line.
     }

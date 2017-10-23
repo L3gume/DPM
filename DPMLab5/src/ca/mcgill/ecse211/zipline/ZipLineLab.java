@@ -33,8 +33,8 @@ public class ZipLineLab {
    */
   public static final double WHEEL_RADIUS = 2.1;
   public static final double TRACK = 11.8;
-  public static final int FORWARD_SPEED = 175;
-  public static final int ROTATE_SPEED = 95;
+  public static final int FORWARD_SPEED = 165;
+  public static final int ROTATE_SPEED = 75;
   
   /*
    * Navigation constants
