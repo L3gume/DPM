@@ -154,7 +154,7 @@ public class ZipLineLab {
     Controller cont = new Controller(odo, dr, nav, loc, zip);
     Display disp = new Display(odo, t, nav, ul, ll, cont);
     disp.start();
-    cor.start();
+    //cor.start();
     
     ZIPLINE_END_POS = new Waypoint(ZIPLINE_START_POS.x + 6, ZIPLINE_START_POS.y);
     cont.setStartingPos(START_POS);

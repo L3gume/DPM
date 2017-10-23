@@ -1,7 +1,5 @@
 package ca.mcgill.ecse211.zipline;
 
-import ca.mcgill.ecse211.zipline.OdometryCorrection.dir;
-
 /**
  * Helper class holding various utility functions
  * 
@@ -9,6 +7,11 @@ import ca.mcgill.ecse211.zipline.OdometryCorrection.dir;
  *
  */
 public class Util {
+  
+  public static enum dir {
+    ZERO, NINETY, ONEEIGHTY, TWOSEVENTY
+  };
+  
   public static double computeAngle(double t_rad) {
     double t_deg = Math.toDegrees(t_rad);
     if (t_deg > 359.99999999 && t_deg >= 0) {

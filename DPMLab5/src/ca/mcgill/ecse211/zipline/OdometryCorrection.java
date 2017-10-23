@@ -12,11 +12,7 @@ public class OdometryCorrection extends Thread {
 
   private final boolean debug_mode = false;
 
-  public enum dir {
-    ZERO, NINETY, ONEEIGHTY, TWOSEVENTY
-  };
-
-  private dir cur_dir;
+  private Util.dir cur_dir;
 
   private double[] prev_pos = new double[] {-1, -1, -1};
 

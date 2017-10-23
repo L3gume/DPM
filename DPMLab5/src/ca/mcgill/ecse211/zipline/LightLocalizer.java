@@ -22,6 +22,9 @@ public class LightLocalizer {
   private double[] angles = new double[4];
 
   private float light_level;
+  
+  private int x_pos_mult = 1;
+  private int y_pos_mult = 1;
 
   public boolean done = false;
 
@@ -40,8 +43,15 @@ public class LightLocalizer {
     if (ZipLineLab.debug_mode) {
       System.out.println("[LIGHTLOC] rotate to align: " + (ref_angle - odo.getTheta()));
     }
-    driver.rotate(Math.toRadians(ref_angle) - odo.getTheta(), false, false); // align to the
-                                                                             // reference angle
+
+    if (!ref_pos.equals(ZipLineLab.START_POS)) {
+      //System.out.println("[LIGHT] NOT START_POS, update ref angle");
+      // we just want to change it if it isn't the starting position.
+      ref_angle = updateRefAngle(Util.getDir(Math.toDegrees(odo.getTheta())));
+    }
+
+    driver.rotate(Math.toRadians(ref_angle) - odo.getTheta(), false, false); // align to ref_angle
+                                                                             // // reference angle
     driver.rotate(360, true, true);
 
     // Start by finding all the lines
@@ -75,20 +85,34 @@ public class LightLocalizer {
     // order the lines were detected in.
     Util.rotateArray(angles, (int) (ref_angle / 90));
 
+//    System.out.println("[LIGHT] ref_angle: " + ref_angle + " ref_pos: [" + ref_pos.x + ";" + ref_pos.y + "]");
+    
+    if (!ref_pos.equals(ZipLineLab.START_POS)) {
+      // we just want to change it if it isn't the starting position.
+      updatePosMultipliers();
+//      System.out.println("[LIGHT] x_mult: " + x_pos_mult + " y_mult: " + y_pos_mult);
+    }
+    
     double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
     double y_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
 
-    if (ref_pos.y == 7) {
-      // we are over the x axis
-      if (y_pos < 0) {
-        y_pos *= -1;
+    if (ref_pos.equals(ZipLineLab.START_POS)) {
+      // Hard-coded bit, kinda crappy, but works and there's more important stuff to think about.
+      if (ref_pos.y == 7) {
+        // we are over the x axis
+        if (y_pos < 0) {
+          y_pos *= -1;
+        }
       }
-    }
-    if (ref_pos.x == 7) {
-      // we are past the y axis
-      if (x_pos < 0) {
-        x_pos *= -1;
+      if (ref_pos.x == 7) {
+        // we are past the y axis
+        if (x_pos < 0) {
+          x_pos *= -1;
+        }
       }
+    } else {
+      y_pos *= y_pos_mult;
+      x_pos *= x_pos_mult;
     }
 
     x_pos = ref_pos.x * ZipLineLab.SQUARE_LENGTH + x_pos;
@@ -98,8 +122,7 @@ public class LightLocalizer {
     odo.setY(y_pos);
 
     /* Angle correction */
-    double err_theta = Math.toRadians(90) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
-    odo.setTheta(Util.computeAngle(odo.getTheta() + err_theta));
+    correctAngle();
 
     // Notify the main method that we are done.
     done = true;
@@ -130,6 +153,36 @@ public class LightLocalizer {
   public void setRefPos(Waypoint ref_pos) {
     this.ref_pos = ref_pos;
     ref_angle = Util.findRefAngle(this.ref_pos);
+  }
+
+  private int updateRefAngle(Util.dir direction) {
+    int ret = 45; // default value
+    switch (direction) {
+      case ZERO: // fallthrough
+      case NINETY:
+        ret = 45;
+        break;
+      case ONEEIGHTY:
+      case TWOSEVENTY:
+        ret = 225;
+        break;
+    }
+    return ret;
+  }
+  
+  private void updatePosMultipliers() {
+    if (ref_angle == 45) {
+      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? 1 : -1;
+      x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? 1 : -1;
+    } else if (ref_angle == 225) {
+      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
+      x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? -1 : 1;
+    }
+  }
+  
+  private void correctAngle() {
+    double err_theta = Math.toRadians(79) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
+    odo.setTheta(Util.computeAngle(odo.getTheta() + err_theta));
   }
 }
 
