@@ -49,9 +49,6 @@ public class Localizer extends Thread {
     
     up.setLocalizer(ul);
     cp.setLocalizer(ll);
-    
-    up.start();
-    cp.start();
   }
 
   /**
