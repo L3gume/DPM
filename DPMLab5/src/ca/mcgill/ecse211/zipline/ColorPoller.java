@@ -12,14 +12,13 @@ import lejos.robotics.SampleProvider;
  */
 public class ColorPoller extends Thread {
   private SampleProvider sample1;
-  private SampleProvider sample2;
   private float[] lightData1;
-  private float[] lightData2;
   private LightLocalizer ll;
-  private OdometryCorrection oc;
+
+  private ZiplineController zc;
 
   public enum l_mode {
-    NONE, LOCALIZATION, CORRECTION
+    NONE, LOCALIZATION, CORRECTION, ZIPLINING
   }
 
   private l_mode cur_mode = l_mode.NONE;
@@ -31,19 +30,13 @@ public class ColorPoller extends Thread {
    * @param lightData1 a float array to store the samples.
    * @param ll a LightLocalizer to which we will pass the data through a synchronized setter.
    */
-  public ColorPoller(SampleProvider sample1, SampleProvider sample2, float[] lightData1, float[] lightData2) {
+  public ColorPoller(SampleProvider sample1, float[] lightData1) {
     this.sample1 = sample1;
-    this.sample2 = sample2;
     this.lightData1 = lightData1;
-    this.lightData2 = lightData2;
   }
 
   public void run() {
     while (true) {
-      sample2.fetchSample(lightData2, 0);
-      if (lightData2[0] > 0.f) {
-        oc.setLightLevel2(lightData2[0]);
-      }
       if (cur_mode == l_mode.LOCALIZATION) {
         sample1.fetchSample(lightData1, 0);
         if (lightData1[0] > 0.f) {
@@ -55,16 +48,21 @@ public class ColorPoller extends Thread {
         } // Poor man's timed sampling
       } else if (cur_mode == l_mode.CORRECTION){
         // Nothing for now.
+      } else if (cur_mode == l_mode.ZIPLINING) {
+    	  sample1.fetchSample(lightData1, 0);
+    	  if (lightData1[0] > 0.f) {
+              zc.setLightLevel(lightData1[0]);
+            }
+            try {
+              Thread.sleep(20);
+            } catch (Exception e) {
+            } // Poor man's timed sampling
       }
     }
   }
 
   public void setLocalizer(LightLocalizer ll) {
     this.ll = ll;
-  }
-  
-  public void setCorrection(OdometryCorrection oc) {
-    this.oc = oc;
   }
   
   public void setMode(l_mode localization) {

@@ -71,6 +71,8 @@ public class ZipLineLab {
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
 
+  public static final double FLOOR_LIGHT_READING = 65;		// TODO: calibrate this
+
   /*
    * Motors and Sensors
    */
@@ -146,8 +148,7 @@ public class ZipLineLab {
     UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);
     UltrasonicPoller up = new UltrasonicPoller(mean, usData);
     LightLocalizer ll = new LightLocalizer(dr, odo);
-    ColorPoller cp = new ColorPoller(median, median2, colorData, colorData2);
-    cp.setCorrection(cor);
+    ColorPoller cp = new ColorPoller(median, colorData);
     Navigation nav = new Navigation(dr, odo, up, cor);
     Localizer loc = new Localizer(ul, ll, up, cp, dr);
     ZiplineController zip = new ZiplineController(odo, dr, zipMotor);
