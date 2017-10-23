@@ -67,9 +67,22 @@ public class Driver {
     rightMotor.rotate(convertDistance(rightRadius, dist), false || ret);
   }
 
+  public void infiniteMoveForward() {
+    rightMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {leftMotor});
+    rightMotor.startSynchronization();
+    rightMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
+    leftMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
+    rightMotor.forward();
+    leftMotor.forward();
+    rightMotor.endSynchronization();
+  }
+  
   public void stop() {
-    rightMotor.stop();
+    rightMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {leftMotor});
+    rightMotor.startSynchronization();
     leftMotor.stop();
+    rightMotor.stop();
+    rightMotor.endSynchronization();
   }
 
   public void avoidObstacle(float dist) {

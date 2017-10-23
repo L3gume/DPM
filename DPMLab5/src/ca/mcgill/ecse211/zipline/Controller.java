@@ -36,7 +36,7 @@ public class Controller extends Thread {
     this.nav = nav;
     this.loc = loc;
     this.zip = zip;
-
+        
     init();
   }
 
@@ -53,6 +53,9 @@ public class Controller extends Thread {
    * run() method.
    */
   public void run() {
+    if (ZipLineLab.debug_zipling) {
+      cur_state = state.ZIPLINE;
+    }
     while (true) {
       switch (cur_state) {
         case IDLE:

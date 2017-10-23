@@ -3,6 +3,7 @@ package ca.mcgill.ecse211.zipline;
 import ca.mcgill.ecse211.zipline.Driver;
 import ca.mcgill.ecse211.zipline.Navigation;
 import ca.mcgill.ecse211.zipline.Odometer;
+import ca.mcgill.ecse211.zipline.ColorPoller.l_mode;
 import ca.mcgill.ecse211.zipline.Display;
 import ca.mcgill.ecse211.zipline.UltrasonicLocalizer.Mode;
 import ca.mcgill.ecse211.zipline.UltrasonicPoller;
@@ -26,6 +27,7 @@ public class ZipLineLab {
    * Global Constants
    */
   public static final boolean debug_mode = false;
+  public static final boolean debug_zipling = true;
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
 
   /*
@@ -71,7 +73,7 @@ public class ZipLineLab {
   public static final double ZIPLINE_LENGTH = 100.0; // TODO: Temporary value for zipline length.
   public static final float ZIPLINE_TRAVERSAL_SPEED = 150.f;
 
-  public static final double FLOOR_LIGHT_READING = 65;		// TODO: calibrate this
+  public static final double FLOOR_LIGHT_READING = 0.1;		// TODO: calibrate this
 
   /*
    * Motors and Sensors
@@ -91,7 +93,6 @@ public class ZipLineLab {
   private static final Port usPort = LocalEV3.get().getPort("S1");
   // Color sensor port.
   private static final Port colorPort = LocalEV3.get().getPort("S2");
-  private static final Port colorPort2 = LocalEV3.get().getPort("S4");
 
   private static SampleProvider us;
   private static SampleProvider mean;
@@ -101,10 +102,6 @@ public class ZipLineLab {
   private static SampleProvider cs;
   private static SampleProvider median;
   private static float[] colorData;
-  
-  private static SampleProvider cs2;
-  private static SampleProvider median2;
-  private static float[] colorData2;
 
   private static Mode choice;
 
@@ -128,13 +125,6 @@ public class ZipLineLab {
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
     
-    @SuppressWarnings("resource")
-    SensorModes colorSensor2 = new EV3ColorSensor(colorPort2);
-    cs2 = colorSensor2.getMode("Red");
-    median2 = new MeanFilter(cs2, cs2.sampleSize());
-    colorData2 = new float[median2.sampleSize()];
-
-    
     START_POS = ZipLineLab.getStartingCorner(t);
     // Display the main menu and receive the starting coordinates from the user.
     ZIPLINE_START_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (localization)", 0, 8));
@@ -153,9 +143,17 @@ public class ZipLineLab {
     Localizer loc = new Localizer(ul, ll, up, cp, dr);
     ZiplineController zip = new ZiplineController(odo, dr, zipMotor);
     Controller cont = new Controller(odo, dr, nav, loc, zip);
-    Display disp = new Display(odo, t, nav, ul, ll, cont);
+    Display disp = new Display(odo, t, nav, ul, cp, cont);
     disp.start();
-    cor.start();
+    //cor.start();
+    
+    up.start();
+    cp.start();
+    
+    if (debug_zipling) {
+      cp.setZipController(zip);
+      cp.setMode(l_mode.ZIPLINING);
+    }
     
     ZIPLINE_END_POS = new Waypoint(ZIPLINE_START_POS.x + 6, ZIPLINE_START_POS.y);
     cont.setStartingPos(START_POS);

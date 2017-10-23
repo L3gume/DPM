@@ -17,16 +17,16 @@ public class Display extends Thread {
 
   private Navigation nav;
   private UltrasonicLocalizer ul;
-  private LightLocalizer ll;
+  private ColorPoller cp;
   private Controller cont;
 
   // constructor
-  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, LightLocalizer ll, Controller cont) {
+  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, ColorPoller cp, Controller cont) {
     this.odometer = odometer;
     this.t = t;
     this.nav = n;
     this.ul = ul;
-    this.ll = ll;
+    this.cp = cp;
     this.cont = cont;
   }
 
@@ -55,7 +55,7 @@ public class Display extends Thread {
       }
 
       t.drawString("distance: " + ul.getDist(), 0, 4);
-      t.drawString("Light Level: " + ll.getLightLevel(), 0, 5);
+      t.drawString("Light Level: " + cp.lightl, 0, 5);
       t.drawString("State: " + cont.getCurrentState(), 0, 6); // Display the current state of the controller
       t.drawString("Sub: " + cont.getCurSubState(), 0, 7); // Display the substate.
 
