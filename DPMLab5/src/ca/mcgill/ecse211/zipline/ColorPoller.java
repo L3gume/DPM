@@ -11,9 +11,12 @@ import lejos.robotics.SampleProvider;
  *         and one for color detection
  */
 public class ColorPoller extends Thread {
-  private SampleProvider sample;
-  private float[] lightData;
+  private SampleProvider sample1;
+  private SampleProvider sample2;
+  private float[] lightData1;
+  private float[] lightData2;
   private LightLocalizer ll;
+  private OdometryCorrection oc;
 
   public enum l_mode {
     NONE, LOCALIZATION
@@ -24,24 +27,30 @@ public class ColorPoller extends Thread {
   /**
    * Constructor
    * 
-   * @param sample a SampleProvider from which we fetch the samples.
-   * @param lightData a float array to store the samples.
+   * @param sample1 a SampleProvider from which we fetch the samples.
+   * @param lightData1 a float array to store the samples.
    * @param ll a LightLocalizer to which we will pass the data through a synchronized setter.
    */
-  public ColorPoller(SampleProvider sample, float[] lightData) {
-    this.sample = sample;
-    this.lightData = lightData;
+  public ColorPoller(SampleProvider sample1, SampleProvider sample2, float[] lightData1, float[] lightData2) {
+    this.sample1 = sample1;
+    this.sample2 = sample2;
+    this.lightData1 = lightData1;
+    this.lightData2 = lightData2;
   }
 
   public void run() {
     while (true) {
+      sample2.fetchSample(lightData2, 0);
+      if (lightData2[0] > 0.f) {
+        oc.setLightLevel(lightData2[0]);
+      }
       if (cur_mode == l_mode.LOCALIZATION) {
-        sample.fetchSample(lightData, 0);
-        if (lightData[0] > 0.f) {
-          ll.setLightLevel(lightData[0]);
+        sample1.fetchSample(lightData1, 0);
+        if (lightData1[0] > 0.f) {
+          ll.setLightLevel(lightData1[0]);
         }
         try {
-          Thread.sleep(40);
+          Thread.sleep(20);
         } catch (Exception e) {
         } // Poor man's timed sampling
       } else {
@@ -52,6 +61,10 @@ public class ColorPoller extends Thread {
 
   public void setLocalizer(LightLocalizer ll) {
     this.ll = ll;
+  }
+  
+  public void setCorrection(OdometryCorrection oc) {
+    this.oc = oc;
   }
   
   public void setMode(l_mode localization) {

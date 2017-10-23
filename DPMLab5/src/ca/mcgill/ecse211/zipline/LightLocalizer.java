@@ -8,7 +8,7 @@ import lejos.hardware.Sound;
  *
  */
 
-//TODO: Add angle correction.
+// TODO: Add angle correction.
 public class LightLocalizer {
   private Driver driver;
   private Odometer odo;
@@ -54,6 +54,12 @@ public class LightLocalizer {
       }
 
       angles[line_count++] = odo.getTheta(); // Record the angle at which we detected the line.
+      try {
+        Thread.sleep(500);
+      } catch (Exception e) {
+        System.out.println("Can't pause thread");
+        // TODO: handle exception
+      }
     }
 
     driver.rotate(0, true, false);
@@ -72,11 +78,28 @@ public class LightLocalizer {
     double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
     double y_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
 
+//    if (ref_pos.y == 7) {
+//      // we are over the x axis
+//      if (y_pos < 0) {
+//        y_pos *= -1;
+//      }
+//    }
+//    if (ref_pos.x == 7) {
+//      // we are past the y axis
+//      if (x_pos < 0) {
+//        x_pos *= -1;
+//      }
+//    }
+
     x_pos = ref_pos.x * ZipLineLab.SQUARE_LENGTH + x_pos;
     y_pos = ref_pos.y * ZipLineLab.SQUARE_LENGTH + y_pos;
 
     odo.setX(x_pos);
     odo.setY(y_pos);
+
+    /* Angle correction */
+//    double err_theta = Math.toRadians(90) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
+//    odo.setTheta(computeAngle(odo.getTheta() + err_theta));
 
     // Notify the main method that we are done.
     done = true;
@@ -143,6 +166,22 @@ public class LightLocalizer {
       System.out.println("[LOCALIZER] Reference position: [" + ref_pos.x + " ; " + ref_pos.y + "]");
       System.out.println("[LOCALIZER] Reference angle: " + ref_angle);
     }
+  }
+
+  /**
+   * 
+   * @param t_rad angle in radians
+   * @return angle in radians, from 0 to 359.9999
+   */
+  private double computeAngle(double t_rad) {
+    double t_deg = Math.toDegrees(t_rad);
+    if (t_deg > 359.99999999 && t_deg >= 0) {
+      t_deg = t_deg - 360;
+    } else if (t_deg < 0) {
+      t_deg = 360 + t_deg;
+    }
+
+    return Math.toRadians(t_deg);
   }
 }
 

@@ -59,8 +59,8 @@ public class Driver {
   }
 
   public void moveForward(double dist, boolean ret) {
-    leftMotor.setAcceleration(3000);
-    rightMotor.setAcceleration(3000);
+    leftMotor.setAcceleration(2000);
+    rightMotor.setAcceleration(2000);
     leftMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
     rightMotor.setSpeed(ZipLineLab.FORWARD_SPEED);
     leftMotor.rotate(convertDistance(leftRadius, dist), true);

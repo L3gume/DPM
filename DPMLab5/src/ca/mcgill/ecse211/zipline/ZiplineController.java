@@ -27,6 +27,8 @@ public class ZiplineController {
   private zip_state cur_state = zip_state.IDLE;
   public boolean traverse = false;
   public boolean done = false;
+  
+  private float light_level = 0.f;
 
   double zip_vect[] = {1.0, 0.0};
 
@@ -112,9 +114,5 @@ public class ZiplineController {
 
   public synchronized zip_state getCurrentState() {
     return cur_state;
-  }
-
-  public void startTraversing() {
-    traverse = true;
   }
 }

@@ -15,6 +15,8 @@ public class Controller extends Thread {
 
   private state cur_state = state.IDLE;
   private boolean traversed_zipline = false;
+  private boolean reached_first_corner = false;
+  private boolean skipped_loc = false;
   private boolean reached_zipline = false;
   private boolean at_zipline = false;
 
@@ -27,7 +29,8 @@ public class Controller extends Thread {
    * @param loc Localizer
    * @param zip ZiplineController
    */
-  public Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc, ZiplineController zip) {
+  public Controller(Odometer odo, Driver drv, Navigation nav, Localizer loc,
+      ZiplineController zip) {
     this.odo = odo;
     this.drv = drv;
     this.nav = nav;
@@ -42,7 +45,7 @@ public class Controller extends Thread {
    */
   private void init() {
     odo.start();
-    //nav.start();
+    // nav.start();
     loc.start();
   }
 
@@ -89,21 +92,34 @@ public class Controller extends Thread {
   }
 
   public state process_localizing() {
-    loc.startLocalization(traversed_zipline || reached_zipline ? true : false);
+    loc.startLocalization(
+        traversed_zipline || reached_zipline || reached_first_corner ? true : false);
     while (!loc.done); // Wait for localization to complete
     // We don't really have a way of knowing if the localization was a success or not, let's just
     // assume it worked like in lab 4.
-    
+
     // reset the traversed_zipline boolean in case we ever need to traverse again.
     if (traversed_zipline) {
       traversed_zipline = false;
     }
-    if (!reached_zipline) {
-      nav.setPath(new Waypoint[] {new Waypoint(1, ZipLineLab.START_POS.y), ZipLineLab.ZIPLINE_START_POS});
+    if (!reached_first_corner && !reached_zipline) {
+      if (ZipLineLab.START_POS.x != 1) {
+        nav.setPath(new Waypoint[] {ZipLineLab.START_POS, new Waypoint(1, ZipLineLab.START_POS.y)});
+      } else {
+        reached_first_corner = true;
+        skipped_loc = true;
+      }
+    }
+    if (reached_first_corner && !reached_zipline) {
+      if (skipped_loc) {
+        nav.setPath(new Waypoint[] {ZipLineLab.START_POS, ZipLineLab.ZIPLINE_START_POS});
+      } else {
+        nav.setPath(new Waypoint[] {ZipLineLab.ZIPLINE_START_POS});
+      }
     } else if (reached_zipline && !at_zipline) {
       nav.setPath(new Waypoint[] {ZipLineLab.ZIPLINE_START_POS});
     }
-    
+
     return state.NAVIGATING;
   }
 
@@ -111,9 +127,12 @@ public class Controller extends Thread {
     if (ZipLineLab.debug_mode) {
       System.out.println("[CONTROLLER] Entering navigation");
     }
-    
+
     nav.process();
-    if (nav.done && !reached_zipline) {
+    if (nav.done && !reached_first_corner) {
+      reached_first_corner = true;
+      loc.setRefPos(new Waypoint(1, ZipLineLab.START_POS.y));
+    } else if (nav.done && !reached_zipline) {
       // TODO: implement position check.
       reached_zipline = true;
       loc.setRefPos(ZipLineLab.ZIPLINE_START_POS);
@@ -121,7 +140,7 @@ public class Controller extends Thread {
       at_zipline = true;
       reached_zipline = false;
     }
-    return nav.done ? at_zipline ? state.ZIPLINE: state.LOCALIZING : state.NAVIGATING;
+    return nav.done ? at_zipline ? state.ZIPLINE : state.LOCALIZING : state.NAVIGATING;
   }
 
   public state process_searching() {
@@ -137,32 +156,37 @@ public class Controller extends Thread {
     if (zip.done) {
       traversed_zipline = true;
     }
-    
+
     return zip.done ? state.IDLE : state.ZIPLINE;
   }
-  
+
   public synchronized state getCurrentState() {
     return cur_state;
   }
-  
+
   /**
    * Returns the substate in the form of a string (since they're all different types
    * 
    * @return substate
    */
-  public synchronized String getCurSubState() {  
+  public synchronized String getCurSubState() {
     switch (cur_state) {
-      case IDLE: return null;
-      case LOCALIZING: return loc.getCurrentState().toString();
-      case NAVIGATING: return nav.getCurrentState().toString();
-      case SEARCHING: return null;
-      case ZIPLINE: return zip.getCurrentState().toString();
+      case IDLE:
+        return null;
+      case LOCALIZING:
+        return loc.getCurrentState().toString();
+      case NAVIGATING:
+        return nav.getCurrentState().toString();
+      case SEARCHING:
+        return null;
+      case ZIPLINE:
+        return zip.getCurrentState().toString();
     }
-    
+
     // fallthrough
     return state.IDLE.toString();
   }
-  
+
   public void setStartingPos(Waypoint start_pos) {
     loc.setRefPos(start_pos);
   }

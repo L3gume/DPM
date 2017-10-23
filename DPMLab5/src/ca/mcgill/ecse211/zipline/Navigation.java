@@ -26,6 +26,7 @@ public class Navigation /* extends Thread */ {
   private Odometer odo;
   private UltrasonicPoller uPoll;
   private Driver driver;
+  private OdometryCorrection cor;
 
   /*
    * Navigation variables
@@ -53,13 +54,13 @@ public class Navigation /* extends Thread */ {
   private boolean obstacle_detected = false;
   private boolean obstacle_avoided = true;
 
-  public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll) {
+  public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll, OdometryCorrection cor) {
     this.driver = driver;
     this.odo = odo;
     this.uPoll = uPoll;
-
+    this.cor = cor;
+   
     // uPoll.setNav(this); Not needed for this lab.
-
     min_dist = Double.MAX_VALUE;
   }
 
@@ -82,6 +83,13 @@ public class Navigation /* extends Thread */ {
      * This is where, depending on the current state, we choose a process_x method to continue our
      * navigation. Each method has its specific conditions and outputs
      */
+
+    if (cur_state == nav_state.MOVING) {
+      cor.setCorrecting(true);
+    } else {
+      cor.setCorrecting(false);
+    }
+
     switch (cur_state) {
       case IDLE:
         cur_state = process_idle();
