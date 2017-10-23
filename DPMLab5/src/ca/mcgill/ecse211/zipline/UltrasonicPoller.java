@@ -36,7 +36,7 @@ public class UltrasonicPoller extends Thread {
         ul.setDist(dist);
         distance = dist;
       try {
-        Thread.sleep(40);
+        Thread.sleep(20);
       } catch (Exception e) {
       } // Poor man's timed sampling
     }

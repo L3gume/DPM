@@ -38,6 +38,8 @@ public class LightLocalizer {
    * computing the robot's position.
    */
   public void localize() {
+    x_pos_mult = 1;
+    y_pos_mult = 1;
     done = false;
     line_count = 0;
     if (ZipLineLab.debug_mode) {
@@ -49,8 +51,11 @@ public class LightLocalizer {
       // we just want to change it if it isn't the starting position.
       ref_angle = updateRefAngle(Util.getDir(Math.toDegrees(odo.getTheta())));
     }
-
-    driver.rotate(Math.toRadians(ref_angle) - odo.getTheta(), false, false); // align to ref_angle
+    double align_ang = Math.toRadians(ref_angle) - odo.getTheta();
+    if (align_ang > Math.toRadians(180)) {
+      align_ang = align_ang - Math.toRadians(360);
+    }
+    driver.rotate(align_ang, false, false); // align to ref_angle
                                                                              // // reference angle
     driver.rotate(360, true, true);
 
@@ -172,8 +177,8 @@ public class LightLocalizer {
   
   private void updatePosMultipliers() {
     if (ref_angle == 45) {
-      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? 1 : -1;
-      x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? 1 : -1;
+      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
+      x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? -1 : 1;
     } else if (ref_angle == 225) {
       y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
       x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? -1 : 1;
@@ -181,8 +186,47 @@ public class LightLocalizer {
   }
   
   private void correctAngle() {
-    double err_theta = Math.toRadians(79) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
-    odo.setTheta(Util.computeAngle(odo.getTheta() + err_theta));
+    double err_theta = 0;
+    double offset = Math.toRadians(80);
+    int mult = 1;
+    switch (ref_angle) {
+      case 45:
+        offset = Math.toRadians(100);
+        if (x_pos_mult == 1) {
+          //offset = Math.toRadians(80);
+          mult = -1;
+        } else {
+          mult = 1;
+        }
+        break;
+      case 135: 
+        if (x_pos_mult == 1) {
+          //offset = Math.toRadians(80);
+          mult = -1;
+        } else {
+          mult = 1;
+        }
+        break;
+      case 225: 
+        if (x_pos_mult == 1) {
+          //offset = Math.toRadians(80);
+          mult = -1;
+        } else {
+          mult = 1;
+        }
+        break;
+      case 315: 
+        if (x_pos_mult == 1) {
+          //offset = Math.toRadians(80);
+          mult = -1;
+        } else {
+          mult = 1;
+        }
+        break;
+    }
+    err_theta = offset + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
+    odo.setTheta(Util.computeAngle(odo.getTheta() + mult * err_theta));
+    
   }
 }
 

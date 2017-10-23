@@ -32,7 +32,7 @@ public class ZipLineLab {
    * Odometry and Driver Constants
    */
   public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 11.8;
+  public static final double TRACK = 10.38;
   public static final int FORWARD_SPEED = 165;
   public static final int ROTATE_SPEED = 75;
   
@@ -100,15 +100,9 @@ public class ZipLineLab {
   private static SampleProvider median;
   private static float[] colorData;
   
-  private static SampleProvider cs2;
-  private static SampleProvider median2;
-  private static float[] colorData2;
-
   private static Mode choice;
 
   public static void main(String[] args) {
-    Waypoint coordsZipLoc; // Coordinate to go to and localize.
-    Waypoint coordsZipLine; // actual starting position of the zipline.
 
     final TextLCD t = LocalEV3.get().getTextLCD();
 
@@ -125,14 +119,7 @@ public class ZipLineLab {
     cs = colorSensor.getMode("Red");
     median = new MedianFilter(cs, cs.sampleSize());
     colorData = new float[median.sampleSize()];
-    
-    @SuppressWarnings("resource")
-    SensorModes colorSensor2 = new EV3ColorSensor(colorPort2);
-    cs2 = colorSensor2.getMode("Red");
-    median2 = new MeanFilter(cs2, cs2.sampleSize());
-    colorData2 = new float[median2.sampleSize()];
 
-    
     START_POS = ZipLineLab.getStartingCorner(t);
     // Display the main menu and receive the starting coordinates from the user.
     ZIPLINE_START_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (localization)", 0, 8));
@@ -146,7 +133,7 @@ public class ZipLineLab {
     UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);
     UltrasonicPoller up = new UltrasonicPoller(mean, usData);
     LightLocalizer ll = new LightLocalizer(dr, odo);
-    ColorPoller cp = new ColorPoller(median, median2, colorData, colorData2);
+    ColorPoller cp = new ColorPoller(median, colorData);
     cp.setCorrection(cor);
     Navigation nav = new Navigation(dr, odo, up, cor);
     Localizer loc = new Localizer(ul, ll, up, cp, dr);

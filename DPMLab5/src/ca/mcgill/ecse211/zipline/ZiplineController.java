@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.zipline;
 
+import lejos.hardware.Button;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -68,7 +69,7 @@ public class ZiplineController {
     zip_motor.backward();
 
     // double theta = odo.getTheta(); // get orientation in radians.
-    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_END_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       return zip_state.ALIGNING;
     } else {
@@ -77,17 +78,18 @@ public class ZiplineController {
   }
 
   public zip_state process_aligning() {
-    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_END_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       dr.rotate(err_theta, false, false);
       return zip_state.ALIGNING;
     } else {
+      Button.waitForAnyPress();
       return zip_state.MOVING;
     }
   }
 
   public zip_state process_moving() {
-    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_END_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       return zip_state.ALIGNING;
     } else {

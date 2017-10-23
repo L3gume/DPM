@@ -38,7 +38,7 @@ public class Util {
       return dir.TWOSEVENTY;
     }
     // That should not happen
-    return dir.ZERO;
+    return t_deg - error <= 180 ? dir.ZERO : dir.ONEEIGHTY;
   }
   
   public static void rotateArray(double[] angles2, int order) {
