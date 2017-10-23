@@ -118,6 +118,7 @@ public class ZiplineController {
   public zip_state process_ziplining() {
     if (getLightLevel() > ZipLineLab.FLOOR_LIGHT_READING) {
       // we've arrived at the end of the zipline, and the wheels should be touching the ground
+      zip_motor.forward();	// move off the final bit of zipline
       dr.moveForward(ZipLineLab.SQUARE_LENGTH / 2, false); // move away from the zipline
       zip_motor.stop(); // stop the zipline motor
       dr.stop(); // stop the main motors
