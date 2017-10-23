@@ -13,21 +13,30 @@ public class UltrasonicPoller extends Thread {
   private float[] usData;
   private float distance;
   
-  public UltrasonicPoller(SampleProvider sample, float[] usData, UltrasonicLocalizer ul) {
+  public enum u_mode {
+    NONE, LOCALIZATION, AVOIDANCE, SEARCH
+  };
+  
+  private u_mode cur_mode = u_mode.NONE;
+  
+  public UltrasonicPoller(SampleProvider sample, float[] usData) {
     this.sample = sample;
     this.usData = usData;
-    this.ul = ul;
   }
 
   public void run() {
     // Terminate whenever the ultrasonic localizer is done to spare system resources.
-    while (!ul.done) {
+    while (true) {
         sample.fetchSample(usData, 0);
         // * 100 to convert to cm.
-        ul.setDist(usData[0] * 100.f);
-        distance = usData[0];
+        float dist = usData[0] * 100.f;
+        if (dist > 255) {
+          dist = 255;
+        }
+        ul.setDist(dist);
+        distance = dist;
       try {
-        Thread.sleep(30);
+        Thread.sleep(40);
       } catch (Exception e) {
       } // Poor man's timed sampling
     }
@@ -57,4 +66,16 @@ public class UltrasonicPoller extends Thread {
 //  public void setNav(Navigation n) {
 //    nav = n;
 //  }
+  
+  public u_mode getMode() {
+    return cur_mode;
+  }
+  
+  public void setMode(u_mode new_mode) {
+    cur_mode = new_mode;
+  }
+  
+  public void setLocalizer(UltrasonicLocalizer ul) {
+    this.ul = ul;
+  }
 }

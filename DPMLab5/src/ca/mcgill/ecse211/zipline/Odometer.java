@@ -62,7 +62,7 @@ public class Odometer extends Thread {
       double delta_dist = 0.5 * (d_l + d_r);
       // Compute the position variation
       
-      double new_theta = computeAngle(this.theta + delta_theta);
+      double new_theta = Util.computeAngle(this.theta + delta_theta);
   
       double delta_x = delta_dist * Math.cos(new_theta);
       double delta_y = delta_dist * Math.sin(new_theta);
@@ -202,16 +202,5 @@ public class Odometer extends Thread {
 
   private double computeDisplacement(double radius, double phi) {
     return (radius * Math.PI * phi) / 180;
-  }
-
-  private double computeAngle(double t_rad) {
-    double t_deg = Math.toDegrees(t_rad);
-    if (t_deg > 359.99999999 && t_deg >= 0) {
-      t_deg = t_deg - 360;
-    } else if (t_deg < 0) {
-      t_deg = 360 + t_deg;
-    }
-
-    return Math.toRadians(t_deg);
   }
 }

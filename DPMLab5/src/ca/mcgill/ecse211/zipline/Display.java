@@ -18,14 +18,16 @@ public class Display extends Thread {
   private Navigation nav;
   private UltrasonicLocalizer ul;
   private LightLocalizer ll;
+  private Controller cont;
 
   // constructor
-  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, LightLocalizer ll) {
+  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, LightLocalizer ll, Controller cont) {
     this.odometer = odometer;
     this.t = t;
     this.nav = n;
     this.ul = ul;
     this.ll = ll;
+    this.cont = cont;
   }
 
   // run method (required for Thread)
@@ -54,8 +56,8 @@ public class Display extends Thread {
 
       t.drawString("distance: " + ul.getDist(), 0, 4);
       t.drawString("Light Level: " + ll.getLightLevel(), 0, 5);
-      t.drawString("", 0, 6);
-      t.drawString("" + nav.getCurrentState(), 0, 6); // Display the current state of the Navigator
+      t.drawString("State: " + cont.getCurrentState(), 0, 6); // Display the current state of the controller
+      t.drawString("Sub: " + cont.getCurSubState(), 0, 7); // Display the substate.
 
       // throttle the OdometryDisplay
       displayEnd = System.currentTimeMillis();
