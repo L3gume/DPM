@@ -19,7 +19,7 @@ public class ColorPoller extends Thread {
   private OdometryCorrection oc;
 
   public enum l_mode {
-    NONE, LOCALIZATION
+    NONE, LOCALIZATION, CORRECTION
   }
 
   private l_mode cur_mode = l_mode.NONE;
@@ -42,7 +42,7 @@ public class ColorPoller extends Thread {
     while (true) {
       sample2.fetchSample(lightData2, 0);
       if (lightData2[0] > 0.f) {
-        oc.setLightLevel(lightData2[0]);
+        oc.setLightLevel2(lightData2[0]);
       }
       if (cur_mode == l_mode.LOCALIZATION) {
         sample1.fetchSample(lightData1, 0);
@@ -53,7 +53,7 @@ public class ColorPoller extends Thread {
           Thread.sleep(20);
         } catch (Exception e) {
         } // Poor man's timed sampling
-      } else {
+      } else if (cur_mode == l_mode.CORRECTION){
         // Nothing for now.
       }
     }

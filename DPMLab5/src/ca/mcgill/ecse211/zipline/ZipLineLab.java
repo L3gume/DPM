@@ -40,17 +40,17 @@ public class ZipLineLab {
    * Navigation constants
    */
 
-  public static final double ANGLE_THRESHOLD = Math.toRadians(2); // If the angle to target position is
+  public static final double ANGLE_THRESHOLD = Math.toRadians(2.25); // If the angle to target position is
                                                             // lower than 2 degrees, then that's
                                                             // good enough.
-  public static final double DISTANCE_THRESHOLD = 1.7; // If the distance is below 2 cm, then that's good
+  public static final double DISTANCE_THRESHOLD = 1.85; // If the distance is below 2 cm, then that's good
                                                // enough.
 
   /*
    * Light Localization Constants
    */
   public static final double SENSOR_OFFSET = 19.85;
-  public static final float LIGHT_THRESHOLD = 0.43f;
+  public static final float LIGHT_THRESHOLD = 0.47f;
   public static Waypoint START_POS;
 
   /*
@@ -62,7 +62,7 @@ public class ZipLineLab {
   /*
    * Zipline Controller Constants
    */
-  public static Waypoint ZIPLINE_POS;
+  public static Waypoint ZIPLINE_TRUE_POS;
   public static Waypoint ZIPLINE_START_POS; // Is going to be inputed by the user.
   public static Waypoint ZIPLINE_END_POS; // Is going to be computed using the inputed zipline start
                                           // position.
@@ -138,7 +138,7 @@ public class ZipLineLab {
     ZIPLINE_START_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (localization)", 0, 8));
 
     // Display the main menu and receive zip line coordinates from the user.
-    ZIPLINE_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (actual)", 0, 8));
+    ZIPLINE_TRUE_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (actual)", 0, 8));
 
     Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
     OdometryCorrection cor = new OdometryCorrection(odo);

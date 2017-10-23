@@ -73,7 +73,7 @@ public class LightLocalizer {
   private void computePosition() {
     // Rotate array depending on which position the robot was initially facing, which changes the
     // order the lines were detected in.
-    rotateArray(angles, (int) (ref_angle / 90));
+    Util.rotateArray(angles, (int) (ref_angle / 90));
 
     double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
     double y_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[3] - angles[1]) / 2);
@@ -98,26 +98,11 @@ public class LightLocalizer {
     odo.setY(y_pos);
 
     /* Angle correction */
-//    double err_theta = Math.toRadians(90) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
-//    odo.setTheta(computeAngle(odo.getTheta() + err_theta));
+    double err_theta = Math.toRadians(90) + ((angles[2] - angles[0]) / 2) - (angles[2] - angles[0]);
+    odo.setTheta(Util.computeAngle(odo.getTheta() + err_theta));
 
     // Notify the main method that we are done.
     done = true;
-  }
-
-  private static void rotateArray(double[] angles2, int order) {
-    if (angles2 == null || order < 0) {
-      throw new IllegalArgumentException(
-          "The array must be non-null and the order must be non-negative");
-    }
-    int offset = angles2.length - order % angles2.length;
-    if (offset > 0) {
-      double[] copy = angles2.clone();
-      for (int i = 0; i < angles2.length; ++i) {
-        int j = (i + offset) % angles2.length;
-        angles2[i] = copy[j];
-      }
-    }
   }
 
   /**
@@ -144,44 +129,7 @@ public class LightLocalizer {
 
   public void setRefPos(Waypoint ref_pos) {
     this.ref_pos = ref_pos;
-    setRefAngle();
-  }
-
-  private void setRefAngle() {
-    // TODO: these positions are only for lab 5, they will have to be changed (or removed) for the
-    // final project since it's hard-coded crap.
-    if (ref_pos.x == 1 && ref_pos.y == 1) {
-      ref_angle = 45;
-    } else if (ref_pos.x == 7 && ref_pos.y == 1) {
-      ref_angle = 135;
-    } else if (ref_pos.x == 7 && ref_pos.y == 7) {
-      ref_angle = 225;
-    } else if (ref_pos.x == 1 && ref_pos.y == 7) {
-      ref_angle = 315;
-    } else {
-      ref_angle = 45;
-    }
-
-    if (ZipLineLab.debug_mode) {
-      System.out.println("[LOCALIZER] Reference position: [" + ref_pos.x + " ; " + ref_pos.y + "]");
-      System.out.println("[LOCALIZER] Reference angle: " + ref_angle);
-    }
-  }
-
-  /**
-   * 
-   * @param t_rad angle in radians
-   * @return angle in radians, from 0 to 359.9999
-   */
-  private double computeAngle(double t_rad) {
-    double t_deg = Math.toDegrees(t_rad);
-    if (t_deg > 359.99999999 && t_deg >= 0) {
-      t_deg = t_deg - 360;
-    } else if (t_deg < 0) {
-      t_deg = 360 + t_deg;
-    }
-
-    return Math.toRadians(t_deg);
+    ref_angle = Util.findRefAngle(this.ref_pos);
   }
 }
 

@@ -5,7 +5,8 @@ import lejos.hardware.Sound;
 public class OdometryCorrection extends Thread {
   private static final long CORRECTION_PERIOD = 30;
   private Odometer odometer;
-  private float light_level;
+  private float light_level1;
+  private float light_level2;
   long line_detected_time;
   private int line_count;
 
@@ -35,34 +36,38 @@ public class OdometryCorrection extends Thread {
       correctionStart = System.currentTimeMillis();
       waitForLine();
 
-      if (System.currentTimeMillis() - line_detected_time > 4000) {
+      if (getLightLevel1() < ZipLineLab.LIGHT_THRESHOLD && getLightLevel1() > 0.1f) {
+        // Something???
+      }
+      
+      if (System.currentTimeMillis() - line_detected_time > 3000) {
         Sound.setVolume(70);
         if (correct) {
           Sound.beepSequenceUp();
         }
         double delta_x = 0, delta_y = 0;
         double cur_theta = odometer.getTheta();
-        cur_dir = getDir(Math.toDegrees(cur_theta));
+        cur_dir = Util.getDir(Math.toDegrees(cur_theta));
         switch (cur_dir) {
           case ZERO:
             delta_x = ZipLineLab.SQUARE_LENGTH;
-            double angle_zero = computeAngle(90 - Math.toDegrees(cur_theta));
+            double angle_zero = Util.computeAngle(90 - Math.toDegrees(cur_theta));
             delta_y = -1 * (delta_y * Math.sin(cur_theta)) / Math.sin(angle_zero);
             break;
           case NINETY:
             delta_y = ZipLineLab.SQUARE_LENGTH;
-            double angle_ninety = computeAngle(90 - (Math.toDegrees(cur_theta) - 90));
+            double angle_ninety = Util.computeAngle(90 - (Math.toDegrees(cur_theta) - 90));
             delta_x = -1 * (delta_x * Math.sin(cur_theta - Math.PI / 2)) / Math.sin(angle_ninety);
             break;
           case ONEEIGHTY:
             delta_x = -ZipLineLab.SQUARE_LENGTH;
-            double angle_oneeighty = computeAngle(90 - (Math.toDegrees(cur_theta) - 180));
+            double angle_oneeighty = Util.computeAngle(90 - (Math.toDegrees(cur_theta) - 180));
             delta_y =
                 -1 * (delta_y * Math.sin(cur_theta - 2 * Math.PI)) / Math.sin(angle_oneeighty);
             break;
           case TWOSEVENTY:
             delta_y = -ZipLineLab.SQUARE_LENGTH;
-            double angle_twoseventy = computeAngle(90 - (Math.toDegrees(cur_theta) - 270));
+            double angle_twoseventy = Util.computeAngle(90 - (Math.toDegrees(cur_theta) - 270));
             delta_x = -1 * (delta_x * Math.sin(cur_theta - (3 * Math.PI) / 2))
                 / Math.sin(angle_twoseventy);
             break;
@@ -99,16 +104,24 @@ public class OdometryCorrection extends Thread {
 
 
   private void waitForLine() {
-    while (getLightLevel() > ZipLineLab.LIGHT_THRESHOLD && getLightLevel() > 0.1f);
+    while (getLightLevel2() > ZipLineLab.LIGHT_THRESHOLD && getLightLevel2() > 0.1f);
     return;
   }
 
-  public synchronized void setLightLevel(float light_level) {
-    this.light_level = light_level;
+  public synchronized void setLightLevel1(float light_level) {
+    this.light_level1 = light_level;
   }
 
-  public synchronized float getLightLevel() {
-    return light_level;
+  public synchronized float getLightLevel1() {
+    return light_level1;
+  }
+  
+  public synchronized void setLightLevel2(float light_level) {
+    this.light_level2 = light_level;
+  }
+
+  public synchronized float getLightLevel2() {
+    return light_level2;
   }
 
   public int getLineCount() {
@@ -133,36 +146,7 @@ public class OdometryCorrection extends Thread {
     // odometer.setTheta(theta);
   }
 
-  private double computeAngle(double t_rad) {
-    double t_deg = Math.toDegrees(t_rad);
-    if (t_deg > 359.99999999 && t_deg >= 0) {
-      t_deg = t_deg - 360;
-    } else if (t_deg < 0) {
-      t_deg = 360 + t_deg;
-    }
-
-    return Math.toRadians(t_deg);
-  }
-
   public synchronized void setCorrecting(boolean arg) {
     correct = arg;
-  }
-
-  // Approximate the direction of the robot
-  private dir getDir(double t_deg) {
-    double error = 8.0;
-    if (t_deg + error >= 0 && t_deg - error <= 0) {
-      return dir.ZERO;
-    } else if (t_deg + error >= 360 && t_deg - error <= 360) {
-      return dir.ZERO;
-    } else if (t_deg + error >= 90 && t_deg - error <= 90) {
-      return dir.NINETY;
-    } else if (t_deg + error >= 180 && t_deg - error <= 180) {
-      return dir.ONEEIGHTY;
-    } else if (t_deg + error >= 270 && t_deg - error <= 270) {
-      return dir.TWOSEVENTY;
-    }
-    // That should not happen
-    return dir.ZERO;
   }
 }

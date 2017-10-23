@@ -118,7 +118,7 @@ public class UltrasonicLocalizer {
     }
 
     // Set the odometer's new orientation.
-    odo.setTheta(computeAngle(theta_err + odo.getTheta()));
+    odo.setTheta(Util.computeAngle(theta_err + odo.getTheta()));
 
     done = true;
     localize = false;
@@ -127,23 +127,6 @@ public class UltrasonicLocalizer {
   /*
    * Utility methods, getters and setters.
    */
-
-  /**
-   * 
-   * @param t_rad angle in radians
-   * @return angle in radians, from 0 to 359.9999
-   */
-  private double computeAngle(double t_rad) {
-    double t_deg = Math.toDegrees(t_rad);
-    if (t_deg > 359.99999999 && t_deg >= 0) {
-      t_deg = t_deg - 360;
-    } else if (t_deg < 0) {
-      t_deg = 360 + t_deg;
-    }
-
-    return Math.toRadians(t_deg);
-  }
-
   /**
    * Used by the ultrasonic poller to pass the distance.
    * 
@@ -205,20 +188,6 @@ public class UltrasonicLocalizer {
 
   public void setRefPos(Waypoint ref_pos) {
     this.ref_pos = ref_pos;
-    setRefAngle();
-  }
-
-  private void setRefAngle() {
-    // TODO: these positions are only for lab 5, they will have to be changed (or removed) for the
-    // final project since it's hard-coded crap.
-    if (ref_pos.x == 1 && ref_pos.y == 1) {
-      ref_angle = 45;
-    } else if (ref_pos.x == 7 && ref_pos.y == 1) {
-      ref_angle = 135;
-    } else if (ref_pos.x == 7 && ref_pos.y == 7) {
-      ref_angle = 225;
-    } else if (ref_pos.x == 1 && ref_pos.y == 7) {
-      ref_angle = 315;
-    }
+    ref_angle = Util.findRefAngle(this.ref_pos);
   }
 }

@@ -167,7 +167,7 @@ public class Localizer extends Thread {
     if (skip_ultrasonic) {
       skip_ultrasonic = false;
     }
-    
+    cp.setMode(l_mode.CORRECTION);
     return loc_state.IDLE;
   }
 

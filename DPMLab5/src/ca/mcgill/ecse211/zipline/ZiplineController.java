@@ -68,7 +68,7 @@ public class ZiplineController {
     zip_motor.backward();
 
     // double theta = odo.getTheta(); // get orientation in radians.
-    double err_theta = angleToZip();
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       return zip_state.ALIGNING;
     } else {
@@ -77,7 +77,7 @@ public class ZiplineController {
   }
 
   public zip_state process_aligning() {
-    double err_theta = angleToZip();
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       dr.rotate(err_theta, false, false);
       return zip_state.ALIGNING;
@@ -87,7 +87,7 @@ public class ZiplineController {
   }
 
   public zip_state process_moving() {
-    double err_theta = angleToZip();
+    double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_TRUE_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
       return zip_state.ALIGNING;
     } else {
@@ -99,17 +99,6 @@ public class ZiplineController {
   public zip_state process_done() {
     done = true;
     return zip_state.IDLE;
-  }
-
-  private double angleToZip() {
-    double orientation_angle = odo.getTheta();
-    double orientation_vect[] = new double[2];
-    orientation_vect[0] = Math.cos(orientation_angle);
-    orientation_vect[1] = Math.sin(orientation_angle);
-    double angle = Math.atan2(zip_vect[1] * orientation_vect[0] - zip_vect[0] * orientation_vect[1],
-        orientation_vect[0] * zip_vect[0] + orientation_vect[1] * zip_vect[1]);
-
-    return angle;
   }
 
   public synchronized zip_state getCurrentState() {
