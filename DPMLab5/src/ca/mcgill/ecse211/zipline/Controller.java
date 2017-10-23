@@ -28,6 +28,7 @@ public class Controller extends Thread {
   private boolean skipped_loc = false;
   private boolean reached_zipline = false;
   private boolean at_zipline = false;
+  private boolean lab5_stop = false;
 
   /**
    * Constructor
@@ -65,7 +66,7 @@ public class Controller extends Thread {
     if (ZipLineLab.debug_zipling) {
       cur_state = state.ZIPLINE;
     }
-    while (true) {
+    while (true && !lab5_stop) {
       switch (cur_state) {
         case IDLE:
           cur_state = process_idle();
@@ -199,6 +200,7 @@ public class Controller extends Thread {
 	// change the boolean when done
     if (zip.done) {
       traversed_zipline = true;
+      lab5_stop = true;
     }
 
     // go to the next state as needed

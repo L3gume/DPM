@@ -27,14 +27,14 @@ public class ZipLineLab {
    * Global Constants
    */
   public static final boolean debug_mode = false;
-  public static final boolean debug_zipling = true;
+  public static final boolean debug_zipling = false;
   public static final double SQUARE_LENGTH = 30.48; // The length of a square on the grid.
 
   /*
    * Odometry and Driver Constants
    */
   public static final double WHEEL_RADIUS = 2.1;
-  public static final double TRACK = 11.8;
+  public static final double TRACK = 10.38;
   public static final int FORWARD_SPEED = 165;
   public static final int ROTATE_SPEED = 75;
   

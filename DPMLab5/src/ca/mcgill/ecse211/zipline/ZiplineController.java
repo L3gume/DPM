@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.zipline;
 
 
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -29,8 +28,10 @@ public class ZiplineController {
   private zip_state cur_state = zip_state.IDLE;
   public boolean traverse = false;
   public boolean done = false;
-
   private float light_level = 0.f;
+
+  private final int FILTER_MAX = 20;
+  private int filter_count;
 
   double zip_vect[] = {1.0, 0.0};
 
@@ -117,12 +118,18 @@ public class ZiplineController {
 
   public zip_state process_ziplining() {
     if (getLightLevel() > ZipLineLab.FLOOR_LIGHT_READING) {
-      // we've arrived at the end of the zipline, and the wheels should be touching the ground
-      zip_motor.forward();	// move off the final bit of zipline
-      dr.moveForward(ZipLineLab.SQUARE_LENGTH / 2, false); // move away from the zipline
-      zip_motor.stop(); // stop the zipline motor
-      dr.stop(); // stop the main motors
-      return zip_state.DONE;
+      if (filter_count < FILTER_MAX) {
+        filter_count++;
+        return zip_state.ZIPLINING;
+      } else {
+        // we've arrived at the end of the zipline, and the wheels should be touching the ground
+        // zip_motor.forward(); // move off the final bit of zipline
+        dr.moveForward(ZipLineLab.SQUARE_LENGTH * 2, false); // move away from the zipline
+        zip_motor.stop(); // stop the zipline motor
+        dr.stop(); // stop the main motors
+        filter_count = 0;
+        return zip_state.DONE;
+      }
     } else {
       return zip_state.ZIPLINING;
     }
