@@ -34,6 +34,13 @@ public class ZiplineController {
 
   double zip_vect[] = {1.0, 0.0};
 
+  /**
+   * Constructor
+   * 
+   * @param odo odometer
+   * @param dr driver
+   * @param zip_motor motor to which the pulley is attached.
+   */
   public ZiplineController(Odometer odo, Driver dr, EV3LargeRegulatedMotor zip_motor) {
     this.odo = odo;
     this.dr = dr;
@@ -63,6 +70,11 @@ public class ZiplineController {
     }
   }
 
+  /**
+   * process the IDLE state
+   * 
+   * @return new state
+   */
   public zip_state process_idle() {
     /*
      * We don't need to suspend the odometer since we will localize afterwards.
@@ -81,6 +93,11 @@ public class ZiplineController {
     }
   }
 
+  /**
+   * process the aligning state
+   * 
+   * @return new state
+   */
   public zip_state process_aligning() {
     double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_END_POS);
     if (Math.abs(err_theta) > ZipLineLab.ZIPLINE_ORIENTATION_THRESHOLD) {
@@ -91,6 +108,11 @@ public class ZiplineController {
     }
   }
 
+  /**
+   * process the moving state
+   * 
+   * @return new state
+   */
   public zip_state process_moving() {
     double err_theta = Util.angleToPos(odo, ZipLineLab.ZIPLINE_END_POS);
 
@@ -114,7 +136,11 @@ public class ZiplineController {
     }
   }
 
-
+  /**
+   * process the ziplining state (when the robot is hanging from the zipline)
+   * 
+   * @return new state
+   */
   public zip_state process_ziplining() {
     if (getLightLevel() > ZipLineLab.FLOOR_LIGHT_READING) {
       if (filter_count < FILTER_MAX) {
@@ -134,11 +160,21 @@ public class ZiplineController {
     }
   }
 
+  /**
+   * process the done state
+   * 
+   * @return new state
+   */
   public zip_state process_done() {
     done = true;
     return zip_state.IDLE;
   }
 
+  /**
+   * Get the current state of the zipline controller
+   * 
+   * @return current state
+   */
   public synchronized zip_state getCurrentState() {
     return cur_state;
   }
@@ -146,10 +182,20 @@ public class ZiplineController {
   /*
    * Getters and Setters for the light_level, used by colorPoller
    */
+  /**
+   * get the light level
+   * 
+   * @return light level
+   */
   public synchronized float getLightLevel() {
     return light_level;
   }
 
+  /**
+   * Set the light level
+   * 
+   * @param new_level
+   */
   public synchronized void setLightLevel(float new_level) {
     light_level = new_level;
   }

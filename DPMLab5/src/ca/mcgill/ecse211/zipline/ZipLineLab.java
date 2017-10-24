@@ -124,39 +124,50 @@ public class ZipLineLab {
     colorData = new float[median.sampleSize()];
     
     START_POS = ZipLineLab.getStartingCorner(t);
-    // Display the main menu and receive the starting coordinates from the user.
+    // Display the main menu and receive the position in front of the zipline from the user.
     ZIPLINE_START_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (localization)", 0, 8));
 
-    // Display the main menu and receive zip line coordinates from the user.
+    // Display the main menu and receive zip line starting coordinates from the user.
     ZIPLINE_TRUE_POS = new Waypoint(ZipLineLab.getCoordinates(t, "Zip Line (actual)", 0, 8));
+    
+    ZIPLINE_END_POS = new Waypoint(ZIPLINE_START_POS.x + 6, ZIPLINE_START_POS.y);
 
     Odometer odo = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
-    OdometryCorrection cor = new OdometryCorrection(odo);
     Driver dr = new Driver(leftMotor, rightMotor, WHEEL_RADIUS, WHEEL_RADIUS, TRACK);
     UltrasonicLocalizer ul = new UltrasonicLocalizer(choice, dr, odo);
     UltrasonicPoller up = new UltrasonicPoller(mean, usData);
     LightLocalizer ll = new LightLocalizer(dr, odo);
     ColorPoller cp = new ColorPoller(median, colorData);
 
-    Navigation nav = new Navigation(dr, odo, up, cor);
+    Navigation nav = new Navigation(dr, odo, up);
     Localizer loc = new Localizer(ul, ll, up, cp, dr);
     ZiplineController zip = new ZiplineController(odo, dr, zipMotor);
     Controller cont = new Controller(odo, cp, nav, loc, zip);
     Display disp = new Display(odo, t, nav, ul, cp, cont);
-    disp.start();
-    //cor.start();
     
+    /*
+     * Start everything
+     */
+    
+    // Start the display.
+    disp.start();
+    
+    // Start the pollers
     up.start();
     cp.start();
+    
+    // Done here for convenience.
     cp.setZipController(zip);
 
-    
+    // Debug option.
     if (debug_zipling) {
       cp.setMode(l_mode.ZIPLINING);
     }
     
-    ZIPLINE_END_POS = new Waypoint(ZIPLINE_START_POS.x + 6, ZIPLINE_START_POS.y);
+    // Give the starting position to the controller
     cont.setStartingPos(START_POS);
+    
+    // Start the main control loop.
     cont.start();
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
@@ -232,6 +243,11 @@ public class ZipLineLab {
     return coords;
   }
   
+  /**
+   * Starting corner selection
+   * @param t the lcd screen to print to
+   * @return the starting position, as a waypoint
+   */
   static Waypoint getStartingCorner(final TextLCD t) {
     Waypoint ret = new Waypoint(1, 1); // If for some reason we don't assign, default value is 1,1
     t.clear();

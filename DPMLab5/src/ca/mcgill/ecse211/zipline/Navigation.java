@@ -21,7 +21,6 @@ public class Navigation /* extends Thread */ {
   private Odometer odo;
   private UltrasonicPoller uPoll;
   private Driver driver;
-  private OdometryCorrection cor;
 
   // Navigation variables
   private boolean navigating; // This is here only because the lab outline asks for it. It's
@@ -59,11 +58,10 @@ public class Navigation /* extends Thread */ {
    * @param uPoll - UltrasonicPoller class
    * @param cor - OdometryCorrection class
    */
-  public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll, OdometryCorrection cor) {
+  public Navigation(Driver driver, Odometer odo, UltrasonicPoller uPoll) {
     this.driver = driver;
     this.odo = odo;
     this.uPoll = uPoll;
-    this.cor = cor;
    
     // uPoll.setNav(this); Not needed for this lab.
     min_dist = Double.MAX_VALUE;
@@ -88,12 +86,6 @@ public class Navigation /* extends Thread */ {
      * This is where, depending on the current state, we choose a process_x method to continue our
      * navigation. Each method has its specific conditions and outputs
      */
-
-    if (cur_state == nav_state.MOVING) {
-      cor.setCorrecting(true);
-    } else {
-      cor.setCorrecting(false);
-    }
 
     switch (cur_state) {
       case IDLE:
@@ -406,11 +398,15 @@ public class Navigation /* extends Thread */ {
   public synchronized boolean isNavigating() {
     return navigating;
   }
-
+  // In there only because the labs asked for it.
   public synchronized void setNavigating(boolean arg) {
     this.navigating = arg;
   }
 
+  /**
+   * set a new path to navigate
+   * @param waypoints a list of waypoints.
+   */
   public void setPath(Waypoint[] waypoints) {
     path = waypoints;
     done = false;

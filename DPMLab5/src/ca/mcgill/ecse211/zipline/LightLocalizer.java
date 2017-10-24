@@ -8,7 +8,6 @@ import lejos.hardware.Sound;
  *
  */
 
-// TODO: Add angle correction.
 public class LightLocalizer {
   private Driver driver;
   private Odometer odo;
@@ -47,7 +46,6 @@ public class LightLocalizer {
     }
 
     if (!ref_pos.equals(ZipLineLab.START_POS)) {
-      //System.out.println("[LIGHT] NOT START_POS, update ref angle");
       // we just want to change it if it isn't the starting position.
       ref_angle = updateRefAngle(Util.getDir(Math.toDegrees(odo.getTheta())));
     }
@@ -56,7 +54,6 @@ public class LightLocalizer {
       align_ang = align_ang - Math.toRadians(360);
     }
     driver.rotate(align_ang, false, false); // align to ref_angle
-                                                                             // // reference angle
     driver.rotate(360, true, true);
 
     // Start by finding all the lines
@@ -72,8 +69,6 @@ public class LightLocalizer {
       try {
         Thread.sleep(500);
       } catch (Exception e) {
-        System.out.println("Can't pause thread");
-        // TODO: handle exception
       }
     }
 
@@ -89,13 +84,10 @@ public class LightLocalizer {
     // Rotate array depending on which position the robot was initially facing, which changes the
     // order the lines were detected in.
     Util.rotateArray(angles, (int) (ref_angle / 90));
-
-//    System.out.println("[LIGHT] ref_angle: " + ref_angle + " ref_pos: [" + ref_pos.x + ";" + ref_pos.y + "]");
     
     if (!ref_pos.equals(ZipLineLab.START_POS)) {
       // we just want to change it if it isn't the starting position.
       updatePosMultipliers();
-//      System.out.println("[LIGHT] x_mult: " + x_pos_mult + " y_mult: " + y_pos_mult);
     }
     
     double x_pos = -ZipLineLab.SENSOR_OFFSET * Math.cos((angles[2] - angles[0]) / 2);
@@ -147,19 +139,36 @@ public class LightLocalizer {
   /*
    * Getters and Setters for the light_level, used by colorPoller
    */
+  
+  /*
+   * Gets the light level.
+   */
   public synchronized float getLightLevel() {
     return light_level;
   }
 
+  /**
+   * Sets the light level
+   * @param new_level the new light level.
+   */
   public synchronized void setLightLevel(float new_level) {
     light_level = new_level;
   }
 
+  /**
+   * Set the reference position to localize against.
+   * @param ref_pos
+   */
   public void setRefPos(Waypoint ref_pos) {
     this.ref_pos = ref_pos;
     ref_angle = Util.findRefAngle(this.ref_pos);
   }
 
+  /**
+   * set the reference angle depending on the direction the robot is going.
+   * @param direction
+   * @return the reference angle, in degrees.
+   */
   private int updateRefAngle(Util.dir direction) {
     int ret = 45; // default value
     switch (direction) {
@@ -175,6 +184,9 @@ public class LightLocalizer {
     return ret;
   }
   
+  /**
+   * Updates the position multipliers depending on what quadrant the robot is (with respect to the reference position.
+   */
   private void updatePosMultipliers() {
     if (ref_angle == 45) {
       y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
@@ -185,6 +197,9 @@ public class LightLocalizer {
     }
   }
   
+  /**
+   * Hard-coded mess to correct the odometer's heading when localizing.
+   */
   private void correctAngle() {
     double err_theta = 0;
     double offset = Math.toRadians(78);
@@ -193,7 +208,6 @@ public class LightLocalizer {
       case 45:
         offset = Math.toRadians(80);
         if (x_pos_mult == 1) {
-          //offset = Math.toRadians(80);
           mult = -1;
         } else {
           mult = 1;
@@ -201,7 +215,6 @@ public class LightLocalizer {
         break;
       case 135: 
         if (x_pos_mult == 1) {
-          //offset = Math.toRadians(80);
           mult = -1;
         } else {
           mult = 1;
@@ -210,7 +223,6 @@ public class LightLocalizer {
       case 225: 
         offset = Math.toRadians(88);
         if (x_pos_mult == 1) {
-          //offset = Math.toRadians(80);
           mult = -1;
         } else {
           mult = 1;
@@ -218,7 +230,6 @@ public class LightLocalizer {
         break;
       case 315: 
         if (x_pos_mult == 1) {
-          //offset = Math.toRadians(80);
           mult = -1;
         } else {
           mult = 1;

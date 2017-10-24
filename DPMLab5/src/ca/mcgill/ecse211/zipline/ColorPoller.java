@@ -19,7 +19,7 @@ public class ColorPoller extends Thread {
   public float lightl = 0.f;
 
   public enum l_mode {
-    NONE, LOCALIZATION, CORRECTION, ZIPLINING
+    NONE, LOCALIZATION, ZIPLINING
   }
   private l_mode cur_mode = l_mode.NONE;
 
@@ -46,8 +46,6 @@ public class ColorPoller extends Thread {
         if (lightData1[0] > 0.f) {
           ll.setLightLevel(lightData1[0]);
         }
-      } else if (cur_mode == l_mode.CORRECTION) {
-        // Nothing for now.
       } else if (cur_mode == l_mode.ZIPLINING) {
         sample1.fetchSample(lightData1, 0);
         if (lightData1[0] > 0.f) {
@@ -65,15 +63,28 @@ public class ColorPoller extends Thread {
   /**
    * Helper methods.
    */
+  
+  /**
+   * Set the light localizer to push data to.
+   * @param ll light localizer
+   */
   public void setLocalizer(LightLocalizer ll) {
     this.ll = ll;
   }
 
+  /**
+   * Set the zipline controller to push data to.
+   * @param zc zipline controller
+   */
   public void setZipController(ZiplineController zc) {
     this.zc = zc;
   }
 
-  public void setMode(l_mode localization) {
-    cur_mode = localization;
+  /**
+   * Set the mode of the poller
+   * @param mode the desired mode.
+   */
+  public void setMode(l_mode mode) {
+    cur_mode = mode;
   }
 }
