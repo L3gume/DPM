@@ -180,18 +180,18 @@ public class LightLocalizer {
       y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
       x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? -1 : 1;
     } else if (ref_angle == 225) {
-      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? -1 : 1;
+      y_pos_mult = (angles[1] - angles[0]) > (angles[2] - angles[1]) ? 1 : -1;
       x_pos_mult = (angles[3] - angles[2]) > (angles[2] - angles[1]) ? -1 : 1;
     }
   }
   
   private void correctAngle() {
     double err_theta = 0;
-    double offset = Math.toRadians(80);
+    double offset = Math.toRadians(85);
     int mult = 1;
     switch (ref_angle) {
       case 45:
-        offset = Math.toRadians(100);
+        offset = Math.toRadians(80);
         if (x_pos_mult == 1) {
           //offset = Math.toRadians(80);
           mult = -1;
@@ -208,6 +208,7 @@ public class LightLocalizer {
         }
         break;
       case 225: 
+        offset = Math.toRadians(88);
         if (x_pos_mult == 1) {
           //offset = Math.toRadians(80);
           mult = -1;

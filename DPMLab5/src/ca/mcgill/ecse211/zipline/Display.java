@@ -1,14 +1,10 @@
-/*
- * OdometryDisplay.java
- */
-
 package ca.mcgill.ecse211.zipline;
 
 import lejos.hardware.lcd.TextLCD;
 
 
-/*
- * Code taken from previous labs.
+/**
+ * This class outputs odometry information to the screen.
  */
 public class Display extends Thread {
   private static final long DISPLAY_PERIOD = 250;
@@ -17,16 +13,16 @@ public class Display extends Thread {
 
   private Navigation nav;
   private UltrasonicLocalizer ul;
-  private LightLocalizer ll;
+  private ColorPoller cp;
   private Controller cont;
 
   // constructor
-  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, LightLocalizer ll, Controller cont) {
+  public Display(Odometer odometer, TextLCD t, Navigation n, UltrasonicLocalizer ul, ColorPoller cp, Controller cont) {
     this.odometer = odometer;
     this.t = t;
     this.nav = n;
     this.ul = ul;
-    this.ll = ll;
+    this.cp = cp;
     this.cont = cont;
   }
 
@@ -55,7 +51,7 @@ public class Display extends Thread {
       }
 
       t.drawString("distance: " + ul.getDist(), 0, 4);
-      t.drawString("Light Level: " + ll.getLightLevel(), 0, 5);
+      t.drawString("Light Level: " + cp.lightl, 0, 5);
       t.drawString("State: " + cont.getCurrentState(), 0, 6); // Display the current state of the controller
       t.drawString("Sub: " + cont.getCurSubState(), 0, 7); // Display the substate.
 
@@ -73,6 +69,13 @@ public class Display extends Thread {
     }
   }
 
+  /**
+   * Format a double to a String.
+   * 
+   * @param x - double to be converted
+   * @param places - number of decimal places
+   * @return double in form of String
+   */
   private static String formattedDoubleToString(double x, int places) {
     String result = "";
     String stack = "";
