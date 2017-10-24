@@ -187,7 +187,7 @@ public class LightLocalizer {
   
   private void correctAngle() {
     double err_theta = 0;
-    double offset = Math.toRadians(85);
+    double offset = Math.toRadians(78);
     int mult = 1;
     switch (ref_angle) {
       case 45:
